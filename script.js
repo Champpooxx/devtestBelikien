@@ -683,18 +683,46 @@ function generateMonthChart(monthData) {
 
     const labels = monthData.map(d => new Date(d.date).getDate()).reverse();
     const data = monthData.map(d => d.durationMs / (1000 * 60 * 60)).reverse();
+    const dailyGoal = config.dailyHours || 7;
+
+    const goalLinePlugin = {
+        id: 'goalLine',
+        afterDatasetsDraw: (chart) => {
+            const { ctx, scales: { y } } = chart;
+            const yValue = y.getPixelForValue(dailyGoal);
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(chart.chartArea.left, yValue);
+            ctx.lineTo(chart.chartArea.right, yValue);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(255, 193, 7, 0.8)';
+            ctx.setLineDash([6, 6]);
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 193, 7, 0.8)';
+            ctx.font = '12px Segoe UI';
+            ctx.textAlign = 'right';
+            ctx.fillText(`Objectif: ${dailyGoal}h`, chart.chartArea.right, yValue - 5);
+            ctx.restore();
+        }
+    };
 
     monthChartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
             labels: labels,
             datasets: [{
                 label: 'Heures travaillées',
                 data: data,
-                backgroundColor: 'rgba(138, 99, 210, 0.6)',
+                fill: true,
+                backgroundColor: 'rgba(138, 99, 210, 0.2)',
                 borderColor: 'rgba(138, 99, 210, 1)',
-                borderWidth: 1,
-                borderRadius: 4,
+                pointBackgroundColor: 'rgba(255, 255, 255, 1)',
+                pointBorderColor: 'rgba(138, 99, 210, 1)',
+                pointHoverRadius: 6,
+                tension: 0.4,
             }]
         },
         options: {
@@ -703,6 +731,7 @@ function generateMonthChart(monthData) {
             scales: {
                 y: {
                     beginAtZero: true,
+                    suggestedMax: dailyGoal + 2,
                     ticks: {
                         color: 'rgba(255, 255, 255, 0.7)'
                     },
@@ -724,6 +753,8 @@ function generateMonthChart(monthData) {
                     display: false
                 },
                 tooltip: {
+                    mode: 'index',
+                    intersect: false,
                     callbacks: {
                         label: function(context) {
                             let label = context.dataset.label || '';
@@ -738,7 +769,8 @@ function generateMonthChart(monthData) {
                     }
                 }
             }
-        }
+        },
+        plugins: [goalLinePlugin]
     });
 }
 

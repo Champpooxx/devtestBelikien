@@ -135,18 +135,9 @@
                 </div>
             </div>
 
-            <!-- Export et Historique -->
-            <div class="card collapsible">
-                <h3 class="card-header">📊 Données et Historique <span class="chevron">▼</span></h3>
-                <div class="card-content">
-                    <!-- Navigation mois -->
-                    <div class="month-nav">
-                        <button onclick="changeMonth(-1)">◀️</button>
-                        <span id="currentMonth">Septembre 2025</span>
-                        <button onclick="changeMonth(1)">▶️</button>
-                    </div>
-
-                <!-- Statistiques mois en cours -->
+            <!-- Résumé du Mois -->
+            <div class="card">
+                <h3>Résumé du Mois</h3>
                 <div class="month-stats">
                     <div class="stat-item">
                         <span class="stat-label">📅 Jours travaillés :</span>
@@ -161,6 +152,18 @@
                         <span class="stat-value" id="monthEarnings">0,00€</span>
                     </div>
                 </div>
+            </div>
+
+            <!-- Export et Historique -->
+            <div class="card collapsible">
+                <h3 class="card-header">📊 Données et Historique <span class="chevron">▼</span></h3>
+                <div class="card-content">
+                    <!-- Navigation mois -->
+                    <div class="month-nav">
+                        <button onclick="changeMonth(-1)">◀️</button>
+                        <span id="currentMonth">Septembre 2025</span>
+                        <button onclick="changeMonth(1)">▶️</button>
+                    </div>
 
                 <!-- Mini-graphique -->
                 <div class="mini-chart-container">
