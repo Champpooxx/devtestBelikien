@@ -12,9 +12,8 @@ let config = {
     dailyHours: 7,
     workStartTime: '08:30',
     workEndTime: '17:00',
-    authorizedStartTime: '07:30',
-    authorizedEndTime: '18:00',
-    theme: 'dark'
+    earlyStartLimit: '07:30',
+    lateEndLimit: '18:00'
 };
 
 // ======================
@@ -43,10 +42,10 @@ function validatePunchTime(dateTime) {
     const minute = date.getMinutes();
     const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 
-    if (timeStr < config.authorizedStartTime || timeStr > config.authorizedEndTime) {
+    if (timeStr < '07:30' || timeStr > '18:00') {
         return {
             valid: false,
-            message: `⚠️ Pointage hors horaires autorisés !\n🕐 Créneaux : ${config.authorizedStartTime} - ${config.authorizedEndTime}\n⏰ Votre pointage : ${timeStr}`
+            message: `⚠️ Pointage hors horaires autorisés !\n🕐 Créneaux : 7h30 - 18h00\n⏰ Votre pointage : ${timeStr}`
         };
     }
 
@@ -126,59 +125,6 @@ function togglePunch() {
     }
 }
 
-function togglePause() {
-    if (!isWorking || !currentSession) return;
-
-    const now = new Date();
-    const pauseButton = document.getElementById('pauseButton');
-    const statusBar = document.getElementById('statusBar');
-    const punchButton = document.getElementById('punchButton');
-
-    currentSession.isPaused = !currentSession.isPaused;
-
-    if (currentSession.isPaused) {
-        // --- MISE EN PAUSE ---
-        currentSession.pauseStartTime = now.toISOString();
-        console.log('⏸️ PAUSE');
-
-        pauseButton.innerHTML = '<span class="btn-icon">▶</span><span class="btn-text">Reprendre</span>';
-        pauseButton.classList.add('on-pause');
-
-        statusBar.textContent = `⏸️ En pause depuis ${now.toLocaleTimeString('fr-FR')}`;
-        statusBar.className = 'status-bar paused';
-
-        punchButton.disabled = true; // Désactiver le pointage sortie pendant la pause
-        if (coinInterval) clearInterval(coinInterval);
-
-    } else {
-        // --- REPRISE ---
-        const pauseStart = new Date(currentSession.pauseStartTime);
-        const pauseEnd = now;
-        const pauseDurationMs = pauseEnd - pauseStart;
-
-        currentSession.totalPauseMs += pauseDurationMs;
-        currentSession.pauses.push({
-            start: currentSession.pauseStartTime,
-            end: pauseEnd.toISOString(),
-            duration: pauseDurationMs
-        });
-        currentSession.pauseStartTime = null;
-        console.log('▶️ REPRISE');
-
-        pauseButton.innerHTML = '<span class="btn-icon">||</span><span class="btn-text">Pause</span>';
-        pauseButton.classList.remove('on-pause');
-
-        statusBar.textContent = `✅ Au travail depuis ${new Date(currentSession.startTime).toLocaleTimeString('fr-FR')}`;
-        statusBar.className = 'status-bar working';
-
-        punchButton.disabled = false; // Réactiver le pointage sortie
-        coinInterval = setInterval(createCoin, 3000);
-    }
-
-    saveCurrentSession();
-    updateDisplay();
-}
-
 function punchIn() {
     const now = new Date();
 
@@ -197,25 +143,17 @@ function punchIn() {
         startTime: now.toISOString(),
         endTime: null,
         sessionHourlyGross: config.hourlyGross,
-        sessionHourlyNet: config.hourlyNet,
-        isPaused: false,
-        pauseStartTime: null,
-        totalPauseMs: 0,
-        pauses: []
+        sessionHourlyNet: config.hourlyNet
     };
 
     isWorking = true;
 
     const button = document.getElementById('punchButton');
     const statusBar = document.getElementById('statusBar');
-    const pauseButton = document.getElementById('pauseButton');
 
     if (button) {
-        button.innerHTML = '<span class="btn-icon">■</span><span class="btn-text">Pointer Sortie</span>';
+        button.textContent = '🔴 Pointer Sortie';
         button.className = 'punch-button punch-out';
-    }
-    if (pauseButton) {
-        pauseButton.disabled = false;
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
@@ -261,24 +199,10 @@ function punchOut() {
 
     currentSession.endTime = now.toISOString();
 
-    // Si en pause, terminer la pause avant de dépointer
-    if (currentSession.isPaused) {
-        const pauseStart = new Date(currentSession.pauseStartTime);
-        const pauseEnd = now;
-        const pauseDurationMs = pauseEnd - pauseStart;
-        currentSession.totalPauseMs += pauseDurationMs;
-        currentSession.pauses.push({
-            start: currentSession.pauseStartTime,
-            end: pauseEnd.toISOString(),
-            duration: pauseDurationMs
-        });
-    }
-
     const startTime = new Date(currentSession.startTime);
     const endTime = new Date(currentSession.endTime);
-    const totalDurationMs = endTime - startTime;
-    const workedDurationMs = totalDurationMs - currentSession.totalPauseMs;
-    const durationHours = workedDurationMs / (1000 * 60 * 60);
+    const durationMs = endTime - startTime;
+    const durationHours = durationMs / (1000 * 60 * 60);
 
     const grossEarning = durationHours * currentSession.sessionHourlyGross;
     const netEarning = durationHours * currentSession.sessionHourlyNet;
@@ -289,10 +213,8 @@ function punchOut() {
         endTime: endTime.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'}),
         startDateTime: currentSession.startTime,
         endDateTime: currentSession.endTime,
-        duration: formatDuration(workedDurationMs),
-        durationMs: workedDurationMs,
-        totalPauseMs: currentSession.totalPauseMs,
-        pauses: currentSession.pauses,
+        duration: formatDuration(durationMs),
+        durationMs: durationMs,
         grossEarning: grossEarning.toFixed(2),
         netEarning: netEarning.toFixed(2),
         hourlyGross: currentSession.sessionHourlyGross,
@@ -308,15 +230,9 @@ function punchOut() {
     const button = document.getElementById('punchButton');
     const statusBar = document.getElementById('statusBar');
 
-    const pauseButton = document.getElementById('pauseButton');
     if (button) {
-        button.innerHTML = '<span class="btn-icon">▶</span><span class="btn-text">Pointer Entrée</span>';
+        button.textContent = '🟢 Pointer Entrée';
         button.className = 'punch-button punch-in';
-    }
-    if (pauseButton) {
-        pauseButton.innerHTML = '<span class="btn-icon">||</span><span class="btn-text">Pause</span>';
-        pauseButton.disabled = true;
-        pauseButton.classList.remove('on-pause');
     }
 
     if (statusBar) {
@@ -358,24 +274,17 @@ function updateDisplay() {
 
     const now = new Date();
     const startTime = new Date(currentSession.startTime);
-    let currentPauseMs = 0;
-
-    if (currentSession.isPaused && currentSession.pauseStartTime) {
-        currentPauseMs = now - new Date(currentSession.pauseStartTime);
-    }
-
-    const workedMs = (now - startTime) - (currentSession.totalPauseMs + currentPauseMs);
-    const durationHours = workedMs / (1000 * 60 * 60);
+    const durationMs = now - startTime;
+    const durationHours = durationMs / (1000 * 60 * 60);
 
     const grossEarning = durationHours * currentSession.sessionHourlyGross;
     const netEarning = durationHours * currentSession.sessionHourlyNet;
 
-    workedTimeEl.textContent = formatDuration(workedMs);
+    workedTimeEl.textContent = formatDuration(durationMs);
     grossEarningsEl.textContent = grossEarning.toFixed(2) + '€';
     netEarningsEl.textContent = netEarning.toFixed(2) + '€';
 
     updateProjection();
-    updateProgressBar(workedMs);
 }
 
 function updateProjection() {
@@ -415,42 +324,6 @@ function updateProjection() {
     projectionEl.textContent = projectionNet.toFixed(2) + '€';
 }
 
-function updateProgressBar(workedMs) {
-    const progressBar = document.getElementById('dailyProgressBar');
-    const progressPercentEl = document.getElementById('progressPercent');
-    const progressTimeEl = document.getElementById('progressTimeRemaining');
-
-    if (!progressBar || !progressPercentEl || !progressTimeEl) return;
-
-    if (!isWorking || !currentSession) {
-        progressBar.style.width = '0%';
-        progressPercentEl.textContent = '0%';
-        progressTimeEl.textContent = `Objectif : ${config.dailyHours}h`;
-        progressBar.className = 'progress-bar';
-        return;
-    }
-
-    const dailyGoalMs = config.dailyHours * 60 * 60 * 1000;
-    const percent = Math.min((workedMs / dailyGoalMs) * 100, 100);
-
-    progressBar.style.width = `${percent}%`;
-    progressPercentEl.textContent = `${Math.floor(percent)}%`;
-
-    progressBar.classList.remove('approaching', 'overtime');
-    if (percent >= 100) {
-        const overtimeMs = workedMs - dailyGoalMs;
-        progressTimeEl.textContent = `Objectif atteint ! (+${formatDuration(overtimeMs)})`;
-        progressBar.classList.add('overtime');
-    } else if (percent >= 80) {
-        const remainingMs = dailyGoalMs - workedMs;
-        progressTimeEl.textContent = `Restant : ${formatDuration(remainingMs)}`;
-        progressBar.classList.add('approaching');
-    } else {
-        const remainingMs = dailyGoalMs - workedMs;
-        progressTimeEl.textContent = `Restant : ${formatDuration(remainingMs)}`;
-    }
-}
-
 // ======================
 // CONFIGURATION
 // ======================
@@ -468,10 +341,6 @@ function saveConfig() {
     config.dailyHours = parseFloat(document.getElementById('dailyHours').value) || 7;
     config.workStartTime = document.getElementById('workStartTime').value || '08:30';
     config.workEndTime = document.getElementById('workEndTime').value || '17:00';
-    config.authorizedStartTime = document.getElementById('authorizedStartTime').value || '07:30';
-    config.authorizedEndTime = document.getElementById('authorizedEndTime').value || '18:00';
-    config.theme = document.querySelector('input[name="theme"]:checked').value || 'dark';
-
 
     const endTargetEl = document.getElementById('endTimeTarget');
     if (endTargetEl) {
@@ -479,7 +348,6 @@ function saveConfig() {
     }
 
     localStorage.setItem('timetracker_config', JSON.stringify(config));
-    applyTheme();
     updateDisplay(); // CORRECTION : Mise à jour après changement config
     console.log('⚙️ Configuration sauvegardée', config);
 }
@@ -491,8 +359,7 @@ function loadConfig() {
 
         const elements = [
             'hourlyGross', 'hourlyNet', 'weeklyHours', 'dailyHours',
-            'workStartTime', 'workEndTime', 'endTimeTarget',
-            'authorizedStartTime', 'authorizedEndTime'
+            'workStartTime', 'workEndTime', 'endTimeTarget'
         ];
 
         elements.forEach(id => {
@@ -507,28 +374,7 @@ function loadConfig() {
         if (endTargetEl && !endTargetEl.value) {
             endTargetEl.value = config.workEndTime || '17:00';
         }
-
-        // Appliquer le thème
-        const themeRadio = document.querySelector(`input[name="theme"][value="${config.theme || 'dark'}"]`);
-        if (themeRadio) {
-            themeRadio.checked = true;
-        }
-        applyTheme();
     }
-
-    // Attacher les écouteurs d'événements pour le thème
-    document.querySelectorAll('input[name="theme"]').forEach(radio => {
-        radio.addEventListener('change', saveConfig);
-    });
-}
-
-function applyTheme() {
-    let themeToApply = config.theme;
-    if (themeToApply === 'auto') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        themeToApply = prefersDark ? 'dark' : 'light';
-    }
-    document.documentElement.setAttribute('data-theme', themeToApply);
 }
 
 // ======================
@@ -557,34 +403,22 @@ function loadCurrentSession() {
             const button = document.getElementById('punchButton');
             const statusBar = document.getElementById('statusBar');
 
-            const pauseButton = document.getElementById('pauseButton');
-
             if (button) {
-                button.innerHTML = '<span class="btn-icon">■</span><span class="btn-text">Pointer Sortie</span>';
+                button.textContent = '🔴 Pointer Sortie';
                 button.className = 'punch-button punch-out';
-                pauseButton.disabled = false;
             }
 
             const startTime = new Date(currentSession.startTime);
             const todayStr = new Date().toISOString().split('T')[0];
             const workDateInfo = currentSession.workDate !== todayStr ? ` (pour le ${currentSession.workDate})` : '';
 
-            if (currentSession.isPaused) {
-                const pauseTime = new Date(currentSession.pauseStartTime);
-                statusBar.textContent = `⏸️ En pause depuis ${pauseTime.toLocaleTimeString('fr-FR')}`;
-                statusBar.className = 'status-bar paused';
-                pauseButton.innerHTML = '<span class="btn-icon">▶</span><span class="btn-text">Reprendre</span>';
-                pauseButton.classList.add('on-pause');
-                button.disabled = true;
-                if (coinInterval) clearInterval(coinInterval);
-            } else {
+            if (statusBar) {
                 statusBar.textContent = `✅ Au travail depuis ${startTime.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}${workDateInfo}`;
                 statusBar.className = 'status-bar working';
-                pauseButton.innerHTML = '<span class="btn-icon">||</span><span class="btn-text">Pause</span>';
-                pauseButton.classList.remove('on-pause');
-                if (coinInterval) clearInterval(coinInterval);
-                coinInterval = setInterval(createCoin, 3000);
             }
+
+            if (coinInterval) clearInterval(coinInterval);
+            coinInterval = setInterval(createCoin, 3000);
         }
     }
 }
@@ -769,12 +603,6 @@ function showDayDetails(dayData) {
             <span class="stat-label">⏱️ Durée :</span>
             <span class="stat-value">${dayData.duration}</span>
         </div>
-        ${dayData.totalPauseMs > 0 ? `
-        <div class="stat-item">
-            <span class="stat-label">⏸️ Temps de pause :</span>
-            <span class="stat-value">${formatDuration(dayData.totalPauseMs)}</span>
-        </div>
-        ` : ''}
         <div class="stat-item">
             <span class="stat-label">💰 Gains bruts :</span>
             <span class="stat-value">${dayData.grossEarning}€</span>

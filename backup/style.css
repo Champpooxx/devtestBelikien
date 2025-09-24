@@ -1,52 +1,13 @@
-:root {
-    --bg-gradient: linear-gradient(135deg, #2b2e4a 0%, #1c1d2c 100%);
-    --text-primary: #f0f0f0;
-    --text-secondary: #ccc;
-    --text-highlight: #fff;
-    --container-bg: rgba(255, 255, 255, 0.1);
-    --container-border: rgba(255, 255, 255, 0.18);
-    --header-bg: rgba(255, 255, 255, 0.15);
-    --card-bg: rgba(255, 255, 255, 0.08);
-    --card-border: rgba(255, 255, 255, 0.1);
-    --input-bg: rgba(0, 0, 0, 0.3);
-    --input-border: rgba(255, 255, 255, 0.2);
-    --input-focus-border: #764ba2;
-    --button-bg: rgba(255, 255, 255, 0.1);
-    --button-hover-bg: rgba(255, 255, 255, 0.2);
-    --button-punch-in-bg: #4CAF50;
-    --button-punch-out-bg: #F44336;
-    --button-punch-pause-bg: #FF9800;
-    --status-working-bg: rgba(76, 175, 80, 0.15);
-    --status-working-text: #98ff9b;
-    --status-working-border: rgba(76, 175, 80, 0.4);
-    --status-paused-bg: rgba(255, 152, 0, 0.15);
-    --status-paused-text: #ffcf8a;
-    --status-paused-border: rgba(255, 152, 0, 0.4);
-    --status-not-working-bg: rgba(255, 152, 0, 0.15);
-    --status-not-working-text: #ffcf8a;
-    --status-not-working-border: rgba(255, 152, 0, 0.4);
-    --progress-bar-bg: #333;
-    --progress-bar-fill-normal: #4CAF50;
-    --progress-bar-fill-approaching: #FFC107;
-    --progress-bar-fill-overtime: #F44336;
-    --modal-bg: rgba(40, 42, 60, 0.9);
-    --modal-border: rgba(255, 255, 255, 0.2);
-}
-
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-html {
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--bg-gradient);
-    color: var(--text-primary);
+    background: linear-gradient(135deg, #2b2e4a 0%, #1c1d2c 100%);
+    color: #f0f0f0;
     min-height: 100vh;
     padding: 10px;
 }
@@ -54,50 +15,21 @@ body {
 .container {
     max-width: 450px;
     margin: 20px auto;
-    background: var(--container-bg);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 15px;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--container-border);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     overflow: hidden;
 }
 
 .header {
-    background: var(--header-bg);
-    color: var(--text-highlight);
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
     text-align: center;
     padding: 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-html[data-theme='light'] {
-    --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    --text-primary: #333;
-    --text-secondary: #555;
-    --text-highlight: #000;
-    --container-bg: rgba(255, 255, 255, 0.7);
-    --container-border: rgba(0, 0, 0, 0.1);
-    --header-bg: rgba(0, 0, 0, 0.05);
-    --card-bg: rgba(255, 255, 255, 0.5);
-    --card-border: rgba(0, 0, 0, 0.08);
-    --input-bg: rgba(0, 0, 0, 0.05);
-    --input-border: rgba(0, 0, 0, 0.15);
-    --input-focus-border: #007bff;
-    --button-bg: rgba(0, 0, 0, 0.05);
-    --button-hover-bg: rgba(0, 0, 0, 0.1);
-    --status-working-bg: rgba(76, 175, 80, 0.1);
-    --status-working-text: #28a745;
-    --status-working-border: rgba(76, 175, 80, 0.3);
-    --status-paused-bg: rgba(255, 152, 0, 0.1);
-    --status-paused-text: #fd7e14;
-    --status-paused-border: rgba(255, 152, 0, 0.3);
-    --status-not-working-bg: rgba(255, 152, 0, 0.1);
-    --status-not-working-text: #fd7e14;
-    --status-not-working-border: rgba(255, 152, 0, 0.3);
-    --progress-bar-bg: #e9ecef;
-    --modal-bg: rgba(255, 255, 255, 0.95);
-    --modal-border: rgba(0, 0, 0, 0.1);
 }
 
 .header h1 {
@@ -117,85 +49,47 @@ html[data-theme='light'] {
 .current-time {
     text-align: center;
     font-size: 28px;
-    color: var(--text-highlight);
+    color: #fff;
     margin-bottom: 20px;
     font-weight: bold;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
-html[data-theme='light'] .current-time {
-    text-shadow: none;
-}
-
-.punch-controls {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 10px;
-    margin-bottom: 30px;
-}
-
 .punch-button {
+    width: 100%;
     height: 70px;
     font-size: 18px;
     font-weight: bold;
     border: none;
     border-radius: 10px;
     cursor: pointer;
+    margin-bottom: 30px;
     transition: all 0.3s ease;
     text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-.punch-button .btn-icon {
-    font-size: 16px;
-    line-height: 1;
-}
-
-.punch-button .btn-text {
-    flex-grow: 1;
-    text-align: center;
 }
 
 .punch-in {
-    background: var(--button-punch-in-bg);
+    background: #4CAF50;
     color: white;
 }
 
 .punch-out {
-    background: var(--button-punch-out-bg);
+    background: #F44336;
     color: white;
 }
 
-.punch-pause {
-    background: var(--button-punch-pause-bg);
-    color: white;
-}
-
-.punch-pause.on-pause {
-    background: var(--button-punch-in-bg); /* Green for resume */
-}
-
-.punch-button:disabled {
-    background: #555;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-.punch-button:hover:not(:disabled) {
+.punch-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 /* Card-based layout for sections */
 .card {
-    background: var(--card-bg);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 20px;
     margin-bottom: 20px;
-    border: 1px solid var(--card-border);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .card h3.card-header {
@@ -233,12 +127,9 @@ html[data-theme='light'] .current-time {
 .stat-item:last-child {
     border-bottom: none;
 }
-html[data-theme='light'] .stat-item {
-    border-bottom-color: rgba(0,0,0,0.08);
-}
 
 .stat-label {
-    color: var(--text-secondary);
+    color: #ccc;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -246,14 +137,14 @@ html[data-theme='light'] .stat-item {
 
 .stat-value {
     font-weight: bold;
-    color: var(--text-highlight);
+    color: #fff;
 }
 
 /* Input dans les stats */
 #endTimeTarget {
-    background: var(--input-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--input-border);
+    background: rgba(0,0,0,0.3);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
     border-radius: 5px;
     padding: 3px 6px;
     font-size: 14px;
@@ -274,7 +165,7 @@ html[data-theme='light'] .stat-item {
 .input-group label {
     display: block;
     margin-bottom: 5px;
-    color: var(--text-secondary);
+    color: #ccc;
     font-weight: 500;
     font-size: 14px;
 }
@@ -282,15 +173,15 @@ html[data-theme='light'] .stat-item {
 .input-group input {
     width: 100%;
     padding: 8px;
-    background: var(--input-bg);
-    border: 1px solid var(--input-border);
-    color: var(--text-primary);
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
     border-radius: 5px;
     font-size: 14px;
 }
 
 .input-group input:focus {
-    border-color: var(--input-focus-border);
+    border-color: #764ba2;
     outline: none;
 }
 
@@ -300,14 +191,14 @@ html[data-theme='light'] .stat-item {
     align-items: center;
     margin-bottom: 15px;
     padding: 10px;
-    background: var(--input-bg);
+    background: rgba(0,0,0,0.2);
     border-radius: 8px;
 }
 
 .month-nav button {
-    background: var(--button-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--input-border);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
     border-radius: 5px;
     padding: 8px 12px;
     cursor: pointer;
@@ -315,16 +206,16 @@ html[data-theme='light'] .stat-item {
 }
 
 .month-nav button:hover {
-    background: var(--button-hover-bg);
+    background: rgba(255,255,255,0.2);
 }
 
 #currentMonth {
     font-weight: bold;
-    color: var(--text-highlight);
+    color: #fff;
 }
 
 .month-stats {
-    background: var(--input-bg);
+    background: rgba(0,0,0,0.1);
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 15px;
@@ -337,9 +228,9 @@ html[data-theme='light'] .stat-item {
 }
 
 .export-btn, .clear-btn {
-    background: var(--button-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--input-border);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
@@ -348,14 +239,13 @@ html[data-theme='light'] .stat-item {
 }
 
 .export-btn:hover, .clear-btn:hover {
-    background: var(--button-hover-bg);
+    background: rgba(255,255,255,0.2);
 }
 
 .clear-btn {
     margin-top: 10px;
     background: rgba(244, 67, 54, 0.5); /* Reddish tint */
     border-color: rgba(244, 67, 54, 0.8);
-    color: white;
 }
 .clear-btn:hover {
     background: rgba(244, 67, 54, 0.7);
@@ -372,106 +262,26 @@ html[data-theme='light'] .stat-item {
 }
 
 .status-bar.working {
-    background: var(--status-working-bg);
-    color: var(--status-working-text);
-    border-color: var(--status-working-border);
-}
-
-.status-bar.paused {
-    background: var(--status-paused-bg);
-    color: var(--status-paused-text);
-    border-color: var(--status-paused-border);
+    background: rgba(76, 175, 80, 0.15);
+    color: #98ff9b;
+    border-color: rgba(76, 175, 80, 0.4);
 }
 
 .status-bar.not-working {
-    background: var(--status-not-working-bg);
-    color: var(--status-not-working-text);
-    border-color: var(--status-not-working-border);
-}
-
-/* ======================
-   PROGRESS BAR
-   ====================== */
-.progress-container {
-    margin-bottom: 20px;
-}
-
-.progress-bar-wrapper {
-    width: 100%;
-    height: 12px;
-    background-color: var(--progress-bar-bg);
-    border-radius: 6px;
-    overflow: hidden;
-    margin-bottom: 8px;
-}
-
-.progress-bar {
-    width: 0%;
-    height: 100%;
-    background-color: var(--progress-bar-fill-normal);
-    border-radius: 6px;
-    transition: width 0.5s ease-out, background-color 0.5s ease;
-}
-
-.progress-bar.approaching { background-color: var(--progress-bar-fill-approaching); }
-.progress-bar.overtime { background-color: var(--progress-bar-fill-overtime); }
-
-.progress-text {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--text-secondary);
-}
-
-/* ======================
-   THEME SELECTOR
-   ====================== */
-.theme-selector {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid var(--card-border);
-}
-.theme-selector label {
-    display: block;
-    margin-bottom: 10px;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-.theme-options {
-    display: flex;
-    justify-content: space-around;
-    background: var(--input-bg);
-    padding: 5px;
-    border-radius: 8px;
-}
-.theme-options input[type="radio"] {
-    display: none;
-}
-.theme-options label {
-    flex: 1;
-    text-align: center;
-    padding: 8px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.3s, color 0.3s;
-    margin-bottom: 0;
-    color: var(--text-primary);
-}
-.theme-options input[type="radio"]:checked + label {
-    background: var(--button-hover-bg);
-    color: var(--text-highlight);
-    font-weight: bold;
+    background: rgba(255, 152, 0, 0.15);
+    color: #ffcf8a;
+    border-color: rgba(255, 152, 0, 0.4);
 }
 
 /* ======================
    CALENDRIER
    ====================== */
 .mini-calendar {
-    background: var(--input-bg);
+    background: rgba(0,0,0,0.15);
     border-radius: 8px;
     padding: 15px;
     margin: 15px 0;
-    border: 1px solid var(--card-border);
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
 .calendar-header {
@@ -480,13 +290,13 @@ html[data-theme='light'] .stat-item {
     gap: 5px;
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--card-border);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .weekday {
     text-align: center;
     font-weight: bold;
-    color: var(--text-secondary);
+    color: #ccc;
     font-size: 14px;
 }
 
@@ -509,11 +319,10 @@ html[data-theme='light'] .stat-item {
 }
 
 .calendar-day.other-month {
-    color: #999;
+    color: #666;
     background: transparent;
     cursor: default;
 }
-html[data-theme='light'] .calendar-day.other-month { color: #ccc; }
 
 .calendar-day.today {
     background: #2196F3;
@@ -537,16 +346,12 @@ html[data-theme='light'] .calendar-day.other-month { color: #ccc; }
     color: #777;
     cursor: default;
 }
-html[data-theme='light'] .calendar-day.future { color: #aaa; }
 
 .calendar-day:hover:not(.other-month):not(.future) {
     transform: scale(1.1);
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     z-index: 1;
     border-color: rgba(255,255,255,0.5);
-}
-html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
-    border-color: rgba(0,0,0,0.3);
 }
 
 .calendar-legend {
@@ -556,7 +361,7 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
     margin-top: 15px;
     font-size: 13px;
     padding-top: 15px;
-    border-top: 1px solid var(--card-border);
+    border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 .legend-item {
@@ -591,11 +396,11 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
 }
 
 .modal-content {
-    background: var(--modal-bg);
-    color: var(--text-primary);
+    background: rgba(40, 42, 60, 0.9);
+    color: #f0f0f0;
     margin: 15% auto;
     padding: 25px;
-    border: 1px solid var(--modal-border);
+    border: 1px solid rgba(255,255,255,0.2);
     width: 90%;
     max-width: 400px;
     border-radius: 10px;
@@ -604,7 +409,7 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
 }
 
 .close-button {
-    color: var(--text-secondary);
+    color: #ccc;
     position: absolute;
     top: 10px;
     right: 15px;
@@ -614,20 +419,20 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
 
 .close-button:hover,
 .close-button:focus {
-    color: var(--text-highlight);
+    color: white;
     text-decoration: none;
     cursor: pointer;
 }
 
 #modal-details .stat-item {
     padding: 12px 0;
-    border-bottom: 1px solid var(--card-border);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 #modal-details .stat-item:last-child {
     border-bottom: none;
 }
 #modal-date {
-    color: var(--text-highlight);
+    color: #fff;
     margin-bottom: 15px;
 }
 
