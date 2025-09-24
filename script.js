@@ -63,6 +63,7 @@ window.onload = function() {
         updateClock();
         updateDisplay();
         updateMonthView(); // Ceci va appeler generateCalendar()
+        setupCollapsibleSections(); // Initialiser les sections pliables
 
         // Intervalles de mise à jour
         setInterval(updateClock, 1000);
@@ -626,6 +627,42 @@ function showDayDetails(dayData) {
 }
 
 // ======================
+// SECTIONS PLIABLES
+// ======================
+
+function setupCollapsibleSections() {
+    const collapsibles = document.querySelectorAll('.collapsible');
+    const openSections = JSON.parse(localStorage.getItem('timetracker_open_sections')) || [];
+
+    collapsibles.forEach((card, index) => {
+        const header = card.querySelector('.card-header');
+        card.setAttribute('data-index', index); // ID pour le stockage
+
+        // Restaurer l'état
+        if (openSections.includes(index)) {
+            card.classList.add('is-open');
+        }
+
+        header.addEventListener('click', () => {
+            const isOpen = card.classList.toggle('is-open');
+            const currentlyOpen = JSON.parse(localStorage.getItem('timetracker_open_sections')) || [];
+
+            if (isOpen) {
+                if (!currentlyOpen.includes(index)) {
+                    currentlyOpen.push(index);
+                }
+            } else {
+                const idx = currentlyOpen.indexOf(index);
+                if (idx > -1) {
+                    currentlyOpen.splice(idx, 1);
+                }
+            }
+            localStorage.setItem('timetracker_open_sections', JSON.stringify(currentlyOpen));
+        });
+    });
+}
+
+// ======================
 // EXPORT CSV
 // ======================
 
@@ -651,34 +688,67 @@ function exportToCSV(data, filename) {
         return;
     }
 
+    // Helper pour formater une ligne CSV avec point-virgule et guillemets
+    const formatCsvRow = (items) => {
+        return items.map(item => `"${String(item || '').replace(/"/g, '""')}"`).join(';');
+    };
+
+    let csvRows = [];
+
+    // --- Section Résumé ---
+    const reportTitle = filename.includes('complet') ? 'Export Complet' : `Mois de ${currentViewMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`;
+    const totalDays = data.length;
+    const totalMs = data.reduce((sum, day) => sum + (day.durationMs || 0), 0);
+    const totalNetEarnings = data.reduce((sum, day) => sum + parseFloat(day.netEarning || 0), 0);
+
+    csvRows.push(formatCsvRow(['Rapport TimeTracker', reportTitle]));
+    csvRows.push(formatCsvRow(['Exporté le', new Date().toLocaleDateString('fr-FR')]));
+    csvRows.push(''); // Ligne vide
+
+    csvRows.push(formatCsvRow(['Résumé de la période']));
+    csvRows.push(formatCsvRow(['Jours travaillés', totalDays]));
+    csvRows.push(formatCsvRow(['Durée totale de travail', formatDuration(totalMs)]));
+    csvRows.push(formatCsvRow(['Gains nets totaux', `${totalNetEarnings.toFixed(2)}€`]));
+    csvRows.push(''); // Ligne vide
+
+    // --- Section Détails ---
+    csvRows.push(formatCsvRow(['Détail des journées']));
     const headers = [
-        'Date', 'Jour', 'Heure Debut', 'Heure Fin', 'Duree',
-        'Taux Brut/h', 'Taux Net/h', 'Gains Brut', 'Gains Net', 'Notes'
+        'Date', 'Jour', 'Heure Début', 'Heure Fin', 'Durée',
+        'Gains Nets (€)', 'Taux Net (€/h)', 'Gains Bruts (€)', 'Taux Brut (€/h)', 'Notes'
     ];
+    csvRows.push(formatCsvRow(headers));
 
-    const csvContent = [
-        headers.join(','),
-        ...data.map(day => {
-            const date = new Date(day.date);
-            const dayName = date.toLocaleDateString('fr-FR', { weekday: 'long' });
+    data.forEach(day => {
+        const date = new Date(day.date);
+        const dayName = date.toLocaleDateString('fr-FR', { weekday: 'long' });
 
-            let notes = '';
-            if (day.startDateTime && day.endDateTime) {
-                const startDate = new Date(day.startDateTime).getDate();
-                const endDate = new Date(day.endDateTime).getDate();
-                if (startDate !== endDate) {
-                    notes = 'Travail de nuit';
-                }
+        let notes = '';
+        if (day.startDateTime && day.endDateTime) {
+            const startDate = new Date(day.startDateTime);
+            const endDate = new Date(day.endDateTime);
+            // Vérifie si le pointage de sortie est un autre jour que le pointage d'entrée
+            if (startDate.toISOString().split('T')[0] !== endDate.toISOString().split('T')[0]) {
+                notes = 'Travail de nuit (cheval sur deux jours)';
             }
+        }
 
-            return [
-                day.date, dayName, day.startTime, day.endTime, day.duration,
-                day.hourlyGross + '€', day.hourlyNet + '€',
-                day.grossEarning + '€', day.netEarning + '€', notes
-            ].join(',');
-        })
-    ].join('\n');
+        const row = [
+            day.date,
+            dayName,
+            day.startTime,
+            day.endTime,
+            day.duration,
+            day.netEarning,
+            day.hourlyNet,
+            day.grossEarning,
+            day.hourlyGross,
+            notes
+        ];
+        csvRows.push(formatCsvRow(row));
+    });
 
+    const csvContent = csvRows.join('\n');
     const csvBlob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(csvBlob);
@@ -691,8 +761,8 @@ function exportToCSV(data, filename) {
     link.click();
     document.body.removeChild(link);
 
-    console.log(`📤 Export CSV: ${filename} (${data.length} entrées)`);
-    alert(`✅ Export réussi !\n📁 Fichier: ${filename}\n📊 ${data.length} journée(s) exportée(s)`);
+    console.log(`📤 Export CSV amélioré: ${filename} (${data.length} entrées)`);
+    alert(`✅ Export réussi !\n📁 Fichier: ${filename}\n📊 ${data.length} journée(s) exportée(s) dans un format amélioré.`);
 }
 
 function clearHistory() {
