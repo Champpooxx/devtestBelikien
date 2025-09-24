@@ -1,36 +1,57 @@
 :root {
+    /* Thème sombre (par défaut) */
     --bg-gradient: linear-gradient(135deg, #2b2e4a 0%, #1c1d2c 100%);
     --text-primary: #f0f0f0;
-    --text-secondary: #ccc;
-    --text-highlight: #fff;
-    --container-bg: rgba(255, 255, 255, 0.1);
-    --container-border: rgba(255, 255, 255, 0.18);
-    --header-bg: rgba(255, 255, 255, 0.15);
-    --card-bg: rgba(255, 255, 255, 0.08);
-    --card-border: rgba(255, 255, 255, 0.1);
-    --input-bg: rgba(0, 0, 0, 0.3);
-    --input-border: rgba(255, 255, 255, 0.2);
-    --input-focus-border: #764ba2;
-    --button-bg: rgba(255, 255, 255, 0.1);
-    --button-hover-bg: rgba(255, 255, 255, 0.2);
-    --button-punch-in-bg: #4CAF50;
-    --button-punch-out-bg: #F44336;
-    --button-punch-pause-bg: #FF9800;
-    --status-working-bg: rgba(76, 175, 80, 0.15);
-    --status-working-text: #98ff9b;
-    --status-working-border: rgba(76, 175, 80, 0.4);
-    --status-paused-bg: rgba(255, 152, 0, 0.15);
-    --status-paused-text: #ffcf8a;
-    --status-paused-border: rgba(255, 152, 0, 0.4);
-    --status-not-working-bg: rgba(255, 152, 0, 0.15);
-    --status-not-working-text: #ffcf8a;
-    --status-not-working-border: rgba(255, 152, 0, 0.4);
-    --progress-bar-bg: #333;
-    --progress-bar-fill-normal: #4CAF50;
-    --progress-bar-fill-approaching: #FFC107;
-    --progress-bar-fill-overtime: #F44336;
-    --modal-bg: rgba(40, 42, 60, 0.9);
-    --modal-border: rgba(255, 255, 255, 0.2);
+    --text-secondary: #a9a9b3;
+    --text-highlight: #ffffff;
+
+    --accent-color: #8a63d2;
+    --accent-color-hover: #764ba2;
+
+    /* Couleurs de statut */
+    --color-success: #4CAF50;
+    --color-warning: #FFC107;
+    --color-danger: #F44336;
+    --color-info: #2196F3;
+
+    /* Composants */
+    --container-bg: rgba(40, 42, 60, 0.7);
+    --container-border: rgba(255, 255, 255, 0.1);
+    --card-bg: rgba(50, 52, 75, 0.5);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --input-bg: rgba(0, 0, 0, 0.25);
+    --input-border: rgba(255, 255, 255, 0.15);
+    --button-bg: rgba(255, 255, 255, 0.08);
+    --button-hover-bg: rgba(255, 255, 255, 0.15);
+    --modal-bg: rgba(30, 32, 50, 0.95);
+    --modal-border: var(--container-border);
+
+    /* Barres de progression */
+    --progress-bar-bg: rgba(0, 0, 0, 0.3);
+    --progress-bar-fill-normal: var(--color-success);
+    --progress-bar-fill-approaching: var(--color-warning);
+    --progress-bar-fill-overtime: var(--color-danger);
+
+    /* Statuts */
+    --status-working-bg: rgba(76, 175, 80, 0.1);
+    --status-working-text: #89ff8d;
+    --status-working-border: rgba(76, 175, 80, 0.3);
+    --status-paused-bg: rgba(255, 193, 7, 0.1);
+    --status-paused-text: #ffd966;
+    --status-paused-border: rgba(255, 193, 7, 0.3);
+    --status-not-working-bg: rgba(80, 80, 90, 0.2);
+    --status-not-working-text: var(--text-secondary);
+    --status-not-working-border: rgba(80, 80, 90, 0.4);
+
+    /* Tailles et espacements */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --box-shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --box-shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.2);
+    --font-size-sm: 12px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
 }
 
 * {
@@ -55,8 +76,8 @@ body {
     max-width: 450px;
     margin: 20px auto;
     background: var(--container-bg);
-    border-radius: 15px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow-strong);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--container-border);
@@ -64,40 +85,46 @@ body {
 }
 
 .header {
-    background: var(--header-bg);
+    background: transparent;
     color: var(--text-highlight);
     text-align: center;
     padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--container-border);
 }
 
 html[data-theme='light'] {
     --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    --text-primary: #333;
-    --text-secondary: #555;
-    --text-highlight: #000;
-    --container-bg: rgba(255, 255, 255, 0.7);
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-highlight: #000000;
+
+    --accent-color: #007bff;
+    --accent-color-hover: #0056b3;
+
+    /* Composants */
+    --container-bg: rgba(255, 255, 255, 0.6);
     --container-border: rgba(0, 0, 0, 0.1);
-    --header-bg: rgba(0, 0, 0, 0.05);
-    --card-bg: rgba(255, 255, 255, 0.5);
+    --card-bg: rgba(255, 255, 255, 0.4);
     --card-border: rgba(0, 0, 0, 0.08);
-    --input-bg: rgba(0, 0, 0, 0.05);
-    --input-border: rgba(0, 0, 0, 0.15);
-    --input-focus-border: #007bff;
+    --input-bg: rgba(0, 0, 0, 0.04);
+    --input-border: rgba(0, 0, 0, 0.1);
     --button-bg: rgba(0, 0, 0, 0.05);
     --button-hover-bg: rgba(0, 0, 0, 0.1);
-    --status-working-bg: rgba(76, 175, 80, 0.1);
-    --status-working-text: #28a745;
-    --status-working-border: rgba(76, 175, 80, 0.3);
-    --status-paused-bg: rgba(255, 152, 0, 0.1);
-    --status-paused-text: #fd7e14;
-    --status-paused-border: rgba(255, 152, 0, 0.3);
-    --status-not-working-bg: rgba(255, 152, 0, 0.1);
-    --status-not-working-text: #fd7e14;
-    --status-not-working-border: rgba(255, 152, 0, 0.3);
+    --modal-bg: rgba(250, 250, 250, 0.95);
+
+    /* Barres de progression */
     --progress-bar-bg: #e9ecef;
-    --modal-bg: rgba(255, 255, 255, 0.95);
-    --modal-border: rgba(0, 0, 0, 0.1);
+
+    /* Statuts */
+    --status-working-bg: rgba(40, 167, 69, 0.1);
+    --status-working-text: #1a7431;
+    --status-working-border: rgba(40, 167, 69, 0.3);
+    --status-paused-bg: rgba(255, 193, 7, 0.1);
+    --status-paused-text: #b38600;
+    --status-paused-border: rgba(255, 193, 7, 0.3);
+    --status-not-working-bg: rgba(108, 117, 125, 0.1);
+    --status-not-working-text: var(--text-secondary);
+    --status-not-working-border: rgba(108, 117, 125, 0.3);
 }
 
 .header h1 {
@@ -136,10 +163,10 @@ html[data-theme='light'] .current-time {
 
 .punch-button {
     height: 70px;
-    font-size: 18px;
+    font-size: var(--font-size-lg);
     font-weight: bold;
     border: none;
-    border-radius: 10px;
+    border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: all 0.3s ease;
     text-transform: uppercase;
@@ -147,6 +174,7 @@ html[data-theme='light'] .current-time {
     align-items: center;
     justify-content: center;
     gap: 10px;
+    box-shadow: var(--box-shadow-soft);
 }
 
 .punch-button .btn-icon {
@@ -160,22 +188,22 @@ html[data-theme='light'] .current-time {
 }
 
 .punch-in {
-    background: var(--button-punch-in-bg);
+    background: var(--color-success);
     color: white;
 }
 
 .punch-out {
-    background: var(--button-punch-out-bg);
+    background: var(--color-danger);
     color: white;
 }
 
 .punch-pause {
-    background: var(--button-punch-pause-bg);
+    background: var(--color-warning);
     color: white;
 }
 
 .punch-pause.on-pause {
-    background: var(--button-punch-in-bg); /* Green for resume */
+    background: var(--color-success); /* Green for resume */
 }
 
 .punch-button:disabled {
@@ -192,10 +220,17 @@ html[data-theme='light'] .current-time {
 /* Card-based layout for sections */
 .card {
     background: var(--card-bg);
-    border-radius: 10px;
+    border-radius: var(--border-radius-lg);
     padding: 20px;
     margin-bottom: 20px;
     border: 1px solid var(--card-border);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    box-shadow: var(--box-shadow-soft);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-strong);
 }
 
 .card h3.card-header {
@@ -228,13 +263,13 @@ html[data-theme='light'] .current-time {
     align-items: center;
     margin-bottom: 10px;
     padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--card-border);
 }
 .stat-item:last-child {
     border-bottom: none;
 }
 html[data-theme='light'] .stat-item {
-    border-bottom-color: rgba(0,0,0,0.08);
+    border-bottom-color: var(--card-border);
 }
 
 .stat-label {
@@ -242,11 +277,13 @@ html[data-theme='light'] .stat-item {
     display: flex;
     align-items: center;
     gap: 8px;
+    font-size: var(--font-size-md);
 }
 
 .stat-value {
     font-weight: bold;
     color: var(--text-highlight);
+    font-size: var(--font-size-md);
 }
 
 /* Input dans les stats */
@@ -254,9 +291,9 @@ html[data-theme='light'] .stat-item {
     background: var(--input-bg);
     color: var(--text-primary);
     border: 1px solid var(--input-border);
-    border-radius: 5px;
+    border-radius: var(--border-radius-sm);
     padding: 3px 6px;
-    font-size: 14px;
+    font-size: var(--font-size-md);
     width: 75px;
 }
 
@@ -276,7 +313,7 @@ html[data-theme='light'] .stat-item {
     margin-bottom: 5px;
     color: var(--text-secondary);
     font-weight: 500;
-    font-size: 14px;
+    font-size: var(--font-size-md);
 }
 
 .input-group input {
@@ -285,13 +322,14 @@ html[data-theme='light'] .stat-item {
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     color: var(--text-primary);
-    border-radius: 5px;
-    font-size: 14px;
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-md);
 }
 
 .input-group input:focus {
-    border-color: var(--input-focus-border);
+    border-color: var(--accent-color);
     outline: none;
+    box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.25);
 }
 
 .month-nav {
@@ -301,17 +339,17 @@ html[data-theme='light'] .stat-item {
     margin-bottom: 15px;
     padding: 10px;
     background: var(--input-bg);
-    border-radius: 8px;
+    border-radius: var(--border-radius-md);
 }
 
 .month-nav button {
     background: var(--button-bg);
     color: var(--text-primary);
     border: 1px solid var(--input-border);
-    border-radius: 5px;
+    border-radius: var(--border-radius-sm);
     padding: 8px 12px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: var(--font-size-lg);
 }
 
 .month-nav button:hover {
@@ -325,7 +363,7 @@ html[data-theme='light'] .stat-item {
 
 .month-stats {
     background: var(--input-bg);
-    border-radius: 8px;
+    border-radius: var(--border-radius-md);
     padding: 15px;
     margin-bottom: 15px;
 }
@@ -341,9 +379,9 @@ html[data-theme='light'] .stat-item {
     color: var(--text-primary);
     border: 1px solid var(--input-border);
     padding: 10px 15px;
-    border-radius: 5px;
+    border-radius: var(--border-radius-sm);
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--font-size-md);
     transition: background 0.3s;
 }
 
@@ -366,9 +404,10 @@ html[data-theme='light'] .stat-item {
     text-align: center;
     padding: 12px;
     margin-bottom: 20px;
-    border-radius: 8px;
+    border-radius: var(--border-radius-md);
     font-weight: bold;
     border: 1px solid;
+    font-size: var(--font-size-md);
 }
 
 .status-bar.working {
@@ -400,7 +439,7 @@ html[data-theme='light'] .stat-item {
     width: 100%;
     height: 12px;
     background-color: var(--progress-bar-bg);
-    border-radius: 6px;
+    border-radius: var(--border-radius-md);
     overflow: hidden;
     margin-bottom: 8px;
 }
@@ -409,8 +448,9 @@ html[data-theme='light'] .stat-item {
     width: 0%;
     height: 100%;
     background-color: var(--progress-bar-fill-normal);
-    border-radius: 6px;
-    transition: width 0.5s ease-out, background-color 0.5s ease;
+    border-radius: var(--border-radius-md);
+    transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.5s ease;
+    box-shadow: 0 0 10px var(--progress-bar-fill-normal);
 }
 
 .progress-bar.approaching { background-color: var(--progress-bar-fill-approaching); }
@@ -442,7 +482,7 @@ html[data-theme='light'] .stat-item {
     justify-content: space-around;
     background: var(--input-bg);
     padding: 5px;
-    border-radius: 8px;
+    border-radius: var(--border-radius-md);
 }
 .theme-options input[type="radio"] {
     display: none;
@@ -451,11 +491,12 @@ html[data-theme='light'] .stat-item {
     flex: 1;
     text-align: center;
     padding: 8px 10px;
-    border-radius: 6px;
+    border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: background 0.3s, color 0.3s;
     margin-bottom: 0;
     color: var(--text-primary);
+    font-size: var(--font-size-md);
 }
 .theme-options input[type="radio"]:checked + label {
     background: var(--button-hover-bg);
@@ -468,7 +509,7 @@ html[data-theme='light'] .stat-item {
    ====================== */
 .mini-calendar {
     background: var(--input-bg);
-    border-radius: 8px;
+    border-radius: var(--border-radius-md);
     padding: 15px;
     margin: 15px 0;
     border: 1px solid var(--card-border);
@@ -598,9 +639,9 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
     border: 1px solid var(--modal-border);
     width: 90%;
     max-width: 400px;
-    border-radius: 10px;
+    border-radius: var(--border-radius-lg);
     position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: var(--box-shadow-strong);
 }
 
 .close-button {
@@ -693,6 +734,13 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
 
 
 /* Responsive */
+@media (max-width: 768px) {
+    .config-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+
 @media (max-width: 480px) {
     body {
         padding: 0;
@@ -702,15 +750,11 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
         border-radius: 0;
         min-height: 100vh;
         border: none;
+        box-shadow: none;
     }
 
     .main-content {
         padding: 20px 15px;
-    }
-
-    .config-.config-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
     }
 
     .export-buttons {
@@ -723,15 +767,15 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
 
     .punch-button {
         height: 60px;
-        font-size: 16px;
+        font-size: var(--font-size-md);
     }
 
     .calendar-day {
-        font-size: 12px;
+        font-size: var(--font-size-sm);
     }
 
     .weekday {
-        font-size: 12px;
+        font-size: var(--font-size-sm);
     }
 
     .calendar-legend {
