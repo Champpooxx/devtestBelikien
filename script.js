@@ -3,6 +3,7 @@ let isWorking = false;
 let currentSession = null;
 let currentViewMonth = new Date();
 let coinInterval = null;
+let monthChartInstance = null;
 
 // Configuration par défaut
 let config = {
@@ -14,7 +15,8 @@ let config = {
     workEndTime: '17:00',
     authorizedStartTime: '07:30',
     authorizedEndTime: '18:00',
-    theme: 'dark'
+    theme: 'dark',
+    soundsEnabled: true
 };
 
 // ======================
@@ -82,6 +84,15 @@ function formatDuration(ms) {
     return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
 }
 
+function playSound(soundId) {
+    if (!config.soundsEnabled) return;
+    const sound = document.getElementById(soundId);
+    if (sound) {
+        sound.currentTime = 0;
+        sound.play().catch(error => console.error(`Erreur de lecture du son: ${error}`));
+    }
+}
+
 // ======================
 // PIGGY BANK
 // ======================
@@ -136,6 +147,7 @@ function togglePause() {
         // --- MISE EN PAUSE ---
         currentSession.pauseStartTime = now.toISOString();
         console.log('⏸️ PAUSE');
+        playSound('sound-pause');
 
         pauseButton.innerHTML = '<span class="btn-icon">▶</span><span class="btn-text">Reprendre</span>';
         pauseButton.classList.add('on-pause');
@@ -201,6 +213,7 @@ function punchIn() {
     };
 
     isWorking = true;
+    playSound('sound-punch-in');
 
     const button = document.getElementById('punchButton');
     const statusBar = document.getElementById('statusBar');
@@ -328,6 +341,7 @@ function punchOut() {
 
     const workDateStr = new Date(savedWorkDate).toLocaleDateString('fr-FR');
     alert(`✅ Journée terminée pour le ${workDateStr} !\n⏱️ Temps travaillé : ${workDay.duration}\n💰 Gains nets : ${workDay.netEarning}€`);
+    playSound('sound-punch-out');
 }
 
 // ======================
@@ -465,6 +479,7 @@ function saveConfig() {
     config.workStartTime = document.getElementById('workStartTime').value || '08:30';
     config.workEndTime = document.getElementById('workEndTime').value || '17:00';
     config.theme = document.querySelector('input[name="theme"]:checked').value || 'dark';
+    config.soundsEnabled = document.getElementById('soundsEnabled').checked;
 
 
     const endTargetEl = document.getElementById('endTimeTarget');
@@ -507,6 +522,12 @@ function loadConfig() {
             themeRadio.checked = true;
         }
         applyTheme();
+
+        // Appliquer le son
+        const soundsCheckbox = document.getElementById('soundsEnabled');
+        if (soundsCheckbox) {
+            soundsCheckbox.checked = config.soundsEnabled;
+        }
     }
 
     // Attacher les écouteurs d'événements pour le thème
@@ -649,6 +670,76 @@ function updateMonthView() {
 
     // CORRECTION : Générer le calendrier
     setTimeout(generateCalendar, 50); // Petit délai pour s'assurer que DOM est prêt
+    generateMonthChart(monthHistory);
+}
+
+function generateMonthChart(monthData) {
+    const ctx = document.getElementById('monthChart');
+    if (!ctx) return;
+
+    if (monthChartInstance) {
+        monthChartInstance.destroy();
+    }
+
+    const labels = monthData.map(d => new Date(d.date).getDate()).reverse();
+    const data = monthData.map(d => d.durationMs / (1000 * 60 * 60)).reverse();
+
+    monthChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Heures travaillées',
+                data: data,
+                backgroundColor: 'rgba(138, 99, 210, 0.6)',
+                borderColor: 'rgba(138, 99, 210, 1)',
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toFixed(2) + 'h';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 // ======================
