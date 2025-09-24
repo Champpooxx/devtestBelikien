@@ -81,7 +81,11 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--container-border);
-    overflow: hidden;
+}
+
+.main-content {
+    padding: 20px;
+    padding-bottom: 30px; /* Ajout de padding en bas */
 }
 
 .header {
