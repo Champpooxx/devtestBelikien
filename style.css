@@ -663,7 +663,8 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
     border-radius: 50%;
     border: 2px solid #DAA520;
     box-shadow: 0 0 5px #FFD700;
-    animation: fall 2s linear;
+    animation: fall var(--duration, 2s) linear;
+    will-change: transform, opacity;
 }
 
 @keyframes bounce {
@@ -680,14 +681,16 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
 
 @keyframes fall {
     0% {
-        transform: translateY(-20px) translateX(0);
+        transform: translateY(-30px) rotate(0deg);
         opacity: 1;
     }
     100% {
-        transform: translateY(50px) translateX(0);
+        transform: translateY(60px) rotate(var(--rotation, 720deg));
         opacity: 0;
+        left: var(--end-x);
     }
 }
+
 
 /* Responsive */
 @media (max-width: 480px) {
@@ -705,7 +708,7 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
         padding: 20px 15px;
     }
 
-    .config-row {
+    .config-.config-row {
         grid-template-columns: 1fr;
         gap: 10px;
     }
