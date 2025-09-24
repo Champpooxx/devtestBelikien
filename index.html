@@ -12,21 +12,27 @@
             <h1>⏰ TimeTracker Pro</h1>
             <div class="subtitle">Pointage et Calcul Salaire</div>
         </div>
-        
+
+        <!-- Tirelire -->
+        <div class="piggy-bank-container">
+            <div class="piggy-bank">🐖</div>
+            <div id="coin-container"></div>
+        </div>
+
         <div class="main-content">
             <!-- Horloge temps réel -->
             <div class="current-time" id="currentTime">--:--:--</div>
-            
+
             <!-- Statut de travail -->
             <div class="status-bar not-working" id="statusBar">
                 📴 Pas au travail
             </div>
-            
+
             <!-- Bouton principal de pointage -->
             <button class="punch-button punch-in" id="punchButton" onclick="togglePunch()">
                 🟢 Pointer Entrée
             </button>
-            
+
             <!-- Statistiques du jour -->
             <div class="stats-section">
                 <h3>📊 Aujourd'hui</h3>
@@ -47,11 +53,11 @@
                     <span class="stat-value" id="projection">--€</span>
                 </div>
             </div>
-            
+
             <!-- Configuration -->
             <div class="config-section">
                 <h3>⚙️ Configuration</h3>
-                
+
                 <!-- Salaires -->
                 <div class="config-row">
                     <div class="input-group">
@@ -63,7 +69,7 @@
                         <input type="number" id="hourlyNet" value="10.00" step="0.01" onchange="saveConfig()">
                     </div>
                 </div>
-                
+
                 <!-- Horaires personnalisés -->
                 <div class="config-row">
                     <div class="input-group">
@@ -75,7 +81,7 @@
                         <input type="time" id="workEndTime" value="17:00" onchange="saveConfig()">
                     </div>
                 </div>
-                
+
                 <div class="config-row">
                     <div class="input-group">
                         <label for="weeklyHours">Heures/semaine :</label>
@@ -87,18 +93,18 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Export et Historique -->
             <div class="export-section">
                 <h3>📊 Données et Historique</h3>
-                
+
                 <!-- Navigation mois -->
                 <div class="month-nav">
                     <button onclick="changeMonth(-1)">◀️</button>
                     <span id="currentMonth">Septembre 2025</span>
                     <button onclick="changeMonth(1)">▶️</button>
                 </div>
-                
+
                 <!-- Statistiques mois en cours -->
                 <div class="month-stats">
                     <div class="stat-item">
@@ -114,25 +120,25 @@
                         <span class="stat-value" id="monthEarnings">0,00€</span>
                     </div>
                 </div>
-                
+
                 <!-- Boutons export -->
                 <div class="export-buttons">
                     <button class="export-btn" onclick="exportCurrentMonth()">📤 Export CSV Mois</button>
                     <button class="export-btn" onclick="exportAllData()">📋 Export CSV Complet</button>
                 </div>
             </div>
-            
+
             <!-- NOUVEAU : Calendrier -->
 <div class="calendar-section">
     <h3>📅 Calendrier Mensuel</h3>
-    
+
     <!-- Navigation mois (garder l'existant) -->
     <div class="month-nav">
         <button onclick="changeMonth(-1)">◀️</button>
         <span id="currentMonth">Septembre 2025</span>
         <button onclick="changeMonth(1)">▶️</button>
     </div>
-    
+
     <!-- Statistiques mois (garder l'existant) -->
     <div class="month-stats">
         <div class="stat-item">
@@ -148,7 +154,7 @@
             <span class="stat-value" id="monthEarnings">0,00€</span>
         </div>
     </div>
-    
+
     <!-- NOUVEAU : Mini calendrier -->
     <div class="mini-calendar">
         <div class="calendar-header">
@@ -164,7 +170,7 @@
             <!-- Jours générés par JavaScript -->
         </div>
     </div>
-    
+
     <!-- NOUVEAU : Légende -->
     <div class="calendar-legend">
         <div class="legend-item">
@@ -180,10 +186,19 @@
             <span>Aujourd'hui</span>
         </div>
     </div>
-    
+
     <!-- Bouton effacer -->
     <button class="clear-btn" onclick="clearHistory()">🗑️ Effacer historique</button>
 </div>
     <script src="script.js"></script>
+
+    <!-- Modal pour les détails du jour -->
+    <div id="day-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="modal-date"></h3>
+            <div id="modal-details"></div>
+        </div>
+    </div>
 </body>
 </html>
