@@ -34,7 +34,7 @@
             </button>
 
             <!-- Statistiques du jour -->
-            <div class="stats-section">
+            <div class="card">
                 <h3>📊 Aujourd'hui</h3>
                 <div class="stat-item">
                     <span class="stat-label">⏱️ Temps travaillé :</span>
@@ -55,55 +55,56 @@
             </div>
 
             <!-- Configuration -->
-            <div class="config-section">
-                <h3>⚙️ Configuration</h3>
+            <div class="card collapsible">
+                <h3 class="card-header">⚙️ Configuration <span class="chevron">▼</span></h3>
+                <div class="card-content">
+                    <!-- Salaires -->
+                    <div class="config-row">
+                        <div class="input-group">
+                            <label for="hourlyGross">Salaire brut/heure (€) :</label>
+                            <input type="number" id="hourlyGross" value="12.50" step="0.01" onchange="saveConfig()">
+                        </div>
+                        <div class="input-group">
+                            <label for="hourlyNet">Salaire net/heure (€) :</label>
+                            <input type="number" id="hourlyNet" value="10.00" step="0.01" onchange="saveConfig()">
+                        </div>
+                    </div>
 
-                <!-- Salaires -->
-                <div class="config-row">
-                    <div class="input-group">
-                        <label for="hourlyGross">Salaire brut/heure (€) :</label>
-                        <input type="number" id="hourlyGross" value="12.50" step="0.01" onchange="saveConfig()">
+                    <!-- Horaires personnalisés -->
+                    <div class="config-row">
+                        <div class="input-group">
+                            <label for="workStartTime">Heure début habituelle :</label>
+                            <input type="time" id="workStartTime" value="08:30" onchange="saveConfig()">
+                        </div>
+                        <div class="input-group">
+                            <label for="workEndTime">Heure fin habituelle :</label>
+                            <input type="time" id="workEndTime" value="17:00" onchange="saveConfig()">
+                        </div>
                     </div>
-                    <div class="input-group">
-                        <label for="hourlyNet">Salaire net/heure (€) :</label>
-                        <input type="number" id="hourlyNet" value="10.00" step="0.01" onchange="saveConfig()">
-                    </div>
-                </div>
 
-                <!-- Horaires personnalisés -->
-                <div class="config-row">
-                    <div class="input-group">
-                        <label for="workStartTime">Heure début habituelle :</label>
-                        <input type="time" id="workStartTime" value="08:30" onchange="saveConfig()">
-                    </div>
-                    <div class="input-group">
-                        <label for="workEndTime">Heure fin habituelle :</label>
-                        <input type="time" id="workEndTime" value="17:00" onchange="saveConfig()">
-                    </div>
-                </div>
-
-                <div class="config-row">
-                    <div class="input-group">
-                        <label for="weeklyHours">Heures/semaine :</label>
-                        <input type="number" id="weeklyHours" value="35" onchange="saveConfig()">
-                    </div>
-                    <div class="input-group">
-                        <label for="dailyHours">Heures/jour théoriques :</label>
-                        <input type="number" id="dailyHours" value="7" step="0.25" onchange="saveConfig()">
+                    <div class="config-row">
+                        <div class="input-group">
+                            <label for="weeklyHours">Heures/semaine :</label>
+                            <input type="number" id="weeklyHours" value="35" onchange="saveConfig()">
+                        </div>
+                        <div class="input-group">
+                            <label for="dailyHours">Heures/jour théoriques :</label>
+                            <input type="number" id="dailyHours" value="7" step="0.25" onchange="saveConfig()">
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Export et Historique -->
-            <div class="export-section">
-                <h3>📊 Données et Historique</h3>
-
-                <!-- Navigation mois -->
-                <div class="month-nav">
-                    <button onclick="changeMonth(-1)">◀️</button>
-                    <span id="currentMonth">Septembre 2025</span>
-                    <button onclick="changeMonth(1)">▶️</button>
-                </div>
+            <div class="card collapsible">
+                <h3 class="card-header">📊 Données et Historique <span class="chevron">▼</span></h3>
+                <div class="card-content">
+                    <!-- Navigation mois -->
+                    <div class="month-nav">
+                        <button onclick="changeMonth(-1)">◀️</button>
+                        <span id="currentMonth">Septembre 2025</span>
+                        <button onclick="changeMonth(1)">▶️</button>
+                    </div>
 
                 <!-- Statistiques mois en cours -->
                 <div class="month-stats">
@@ -121,75 +122,47 @@
                     </div>
                 </div>
 
-                <!-- Boutons export -->
-                <div class="export-buttons">
-                    <button class="export-btn" onclick="exportCurrentMonth()">📤 Export CSV Mois</button>
-                    <button class="export-btn" onclick="exportAllData()">📋 Export CSV Complet</button>
+                    <!-- Boutons export -->
+                    <div class="export-buttons">
+                        <button class="export-btn" onclick="exportCurrentMonth()">📤 Export CSV Mois</button>
+                        <button class="export-btn" onclick="exportAllData()">📋 Export CSV Complet</button>
+                    </div>
+                     <button class="clear-btn" onclick="clearHistory()">🗑️ Effacer tout l'historique</button>
                 </div>
             </div>
 
-            <!-- NOUVEAU : Calendrier -->
-<div class="calendar-section">
-    <h3>📅 Calendrier Mensuel</h3>
-
-    <!-- Navigation mois (garder l'existant) -->
-    <div class="month-nav">
-        <button onclick="changeMonth(-1)">◀️</button>
-        <span id="currentMonth">Septembre 2025</span>
-        <button onclick="changeMonth(1)">▶️</button>
-    </div>
-
-    <!-- Statistiques mois (garder l'existant) -->
-    <div class="month-stats">
-        <div class="stat-item">
-            <span class="stat-label">📅 Jours travaillés :</span>
-            <span class="stat-value" id="monthDays">0</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">⏱️ Total heures :</span>
-            <span class="stat-value" id="monthHours">0h 00m</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">💰 Total gains :</span>
-            <span class="stat-value" id="monthEarnings">0,00€</span>
-        </div>
-    </div>
-
-    <!-- NOUVEAU : Mini calendrier -->
-    <div class="mini-calendar">
-        <div class="calendar-header">
-            <div class="weekday">L</div>
-            <div class="weekday">M</div>
-            <div class="weekday">M</div>
-            <div class="weekday">J</div>
-            <div class="weekday">V</div>
-            <div class="weekday">S</div>
-            <div class="weekday">D</div>
-        </div>
-        <div class="calendar-grid" id="calendarGrid">
-            <!-- Jours générés par JavaScript -->
-        </div>
-    </div>
-
-    <!-- NOUVEAU : Légende -->
-    <div class="calendar-legend">
-        <div class="legend-item">
-            <span class="legend-color full-day"></span>
-            <span>Journée complète (7h+)</span>
-        </div>
-        <div class="legend-item">
-            <span class="legend-color partial-day"></span>
-            <span>Journée partielle</span>
-        </div>
-        <div class="legend-item">
-            <span class="legend-color today"></span>
-            <span>Aujourd'hui</span>
-        </div>
-    </div>
-
-    <!-- Bouton effacer -->
-    <button class="clear-btn" onclick="clearHistory()">🗑️ Effacer historique</button>
-</div>
+            <!-- Calendrier -->
+            <div class="card">
+                <h3>📅 Calendrier Mensuel</h3>
+                <div class="mini-calendar">
+                    <div class="calendar-header">
+                        <div class="weekday">L</div>
+                        <div class="weekday">M</div>
+                        <div class="weekday">M</div>
+                        <div class="weekday">J</div>
+                        <div class="weekday">V</div>
+                        <div class="weekday">S</div>
+                        <div class="weekday">D</div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Jours générés par JavaScript -->
+                    </div>
+                </div>
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <span class="legend-color full-day"></span>
+                        <span>Journée complète (7h+)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color partial-day"></span>
+                        <span>Journée partielle</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color today"></span>
+                        <span>Aujourd'hui</span>
+                    </div>
+                </div>
+            </div>
     <script src="script.js"></script>
 
     <!-- Modal pour les détails du jour -->
