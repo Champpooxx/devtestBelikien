@@ -38,18 +38,7 @@ function getWorkDate(dateTime) {
 }
 
 function validatePunchTime(dateTime) {
-    const date = new Date(dateTime);
-    const hour = date.getHours();
-    const minute = date.getMinutes();
-    const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-
-    if (timeStr < config.authorizedStartTime || timeStr > config.authorizedEndTime) {
-        return {
-            valid: false,
-            message: `⚠️ Pointage hors horaires autorisés !\n🕐 Créneaux : ${config.authorizedStartTime} - ${config.authorizedEndTime}\n⏰ Votre pointage : ${timeStr}`
-        };
-    }
-
+    // La validation est maintenant désactivée, retourne toujours vrai.
     return { valid: true };
 }
 
@@ -105,13 +94,20 @@ function createCoin() {
     coin.className = 'coin';
 
     const startX = Math.random() * (coinContainer.offsetWidth - 20);
+    const endX = startX + (Math.random() - 0.5) * 60; // Mouvement horizontal
+    const rotation = (Math.random() - 0.5) * 720; // Rotation en degrés
+    const duration = 1500 + Math.random() * 1000; // Durée variable
+
     coin.style.left = `${startX}px`;
+    coin.style.setProperty('--end-x', `${endX}px`);
+    coin.style.setProperty('--rotation', `${rotation}deg`);
+    coin.style.setProperty('--duration', `${duration}ms`);
 
     coinContainer.appendChild(coin);
 
     setTimeout(() => {
         coin.remove();
-    }, 2000);
+    }, duration);
 }
 
 // ======================
@@ -468,8 +464,6 @@ function saveConfig() {
     config.dailyHours = parseFloat(document.getElementById('dailyHours').value) || 7;
     config.workStartTime = document.getElementById('workStartTime').value || '08:30';
     config.workEndTime = document.getElementById('workEndTime').value || '17:00';
-    config.authorizedStartTime = document.getElementById('authorizedStartTime').value || '07:30';
-    config.authorizedEndTime = document.getElementById('authorizedEndTime').value || '18:00';
     config.theme = document.querySelector('input[name="theme"]:checked').value || 'dark';
 
 
@@ -491,8 +485,7 @@ function loadConfig() {
 
         const elements = [
             'hourlyGross', 'hourlyNet', 'weeklyHours', 'dailyHours',
-            'workStartTime', 'workEndTime', 'endTimeTarget',
-            'authorizedStartTime', 'authorizedEndTime'
+            'workStartTime', 'workEndTime', 'endTimeTarget'
         ];
 
         elements.forEach(id => {
@@ -860,38 +853,39 @@ function exportToCSV(data, filename) {
         return;
     }
 
-    // Helper pour formater une ligne CSV avec point-virgule et guillemets
     const formatCsvRow = (items) => {
         return items.map(item => `"${String(item || '').replace(/"/g, '""')}"`).join(';');
     };
 
     let csvRows = [];
 
-    // --- Section Résumé ---
     const reportTitle = filename.includes('complet') ? 'Export Complet' : `Mois de ${currentViewMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`;
     const totalDays = data.length;
     const totalMs = data.reduce((sum, day) => sum + (day.durationMs || 0), 0);
     const totalNetEarnings = data.reduce((sum, day) => sum + parseFloat(day.netEarning || 0), 0);
+    const totalGrossEarnings = data.reduce((sum, day) => sum + parseFloat(day.grossEarning || 0), 0);
+    const totalPauseMs = data.reduce((sum, day) => sum + (day.totalPauseMs || 0), 0);
 
     csvRows.push(formatCsvRow(['Rapport TimeTracker', reportTitle]));
-    csvRows.push(formatCsvRow(['Exporté le', new Date().toLocaleDateString('fr-FR')]));
-    csvRows.push(''); // Ligne vide
+    csvRows.push(formatCsvRow(['Exporté le', new Date().toLocaleString('fr-FR')]));
+    csvRows.push('');
 
     csvRows.push(formatCsvRow(['Résumé de la période']));
     csvRows.push(formatCsvRow(['Jours travaillés', totalDays]));
     csvRows.push(formatCsvRow(['Durée totale de travail', formatDuration(totalMs)]));
+    csvRows.push(formatCsvRow(['Durée totale de pause', formatDuration(totalPauseMs)]));
+    csvRows.push(formatCsvRow(['Gains bruts totaux', `${totalGrossEarnings.toFixed(2)}€`]));
     csvRows.push(formatCsvRow(['Gains nets totaux', `${totalNetEarnings.toFixed(2)}€`]));
-    csvRows.push(''); // Ligne vide
+    csvRows.push('');
 
-    // --- Section Détails ---
     csvRows.push(formatCsvRow(['Détail des journées']));
     const headers = [
-        'Date', 'Jour', 'Heure Début', 'Heure Fin', 'Durée',
-        'Gains Nets (€)', 'Taux Net (€/h)', 'Gains Bruts (€)', 'Taux Brut (€/h)', 'Notes'
+        'Date', 'Jour', 'Heure Début', 'Heure Fin', 'Durée Travail', 'Durée Pause',
+        'Gains Nets (€)', 'Taux Net (€/h)', 'Gains Bruts (€)', 'Taux Brut (€/h)', 'Détail Pauses', 'Notes'
     ];
     csvRows.push(formatCsvRow(headers));
 
-    data.forEach(day => {
+    data.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(day => {
         const date = new Date(day.date);
         const dayName = date.toLocaleDateString('fr-FR', { weekday: 'long' });
 
@@ -899,11 +893,18 @@ function exportToCSV(data, filename) {
         if (day.startDateTime && day.endDateTime) {
             const startDate = new Date(day.startDateTime);
             const endDate = new Date(day.endDateTime);
-            // Vérifie si le pointage de sortie est un autre jour que le pointage d'entrée
             if (startDate.toISOString().split('T')[0] !== endDate.toISOString().split('T')[0]) {
-                notes = 'Travail de nuit (cheval sur deux jours)';
+                notes = 'Travail de nuit';
             }
         }
+
+        const pauseDetails = (day.pauses || [])
+            .map(p => {
+                const start = new Date(p.start).toLocaleTimeString('fr-FR');
+                const end = new Date(p.end).toLocaleTimeString('fr-FR');
+                return `${start}-${end} (${formatDuration(p.duration)})`;
+            })
+            .join(', ');
 
         const row = [
             day.date,
@@ -911,10 +912,12 @@ function exportToCSV(data, filename) {
             day.startTime,
             day.endTime,
             day.duration,
+            formatDuration(day.totalPauseMs || 0),
             day.netEarning,
             day.hourlyNet,
             day.grossEarning,
             day.hourlyGross,
+            pauseDetails,
             notes
         ];
         csvRows.push(formatCsvRow(row));
