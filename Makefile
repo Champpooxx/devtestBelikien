@@ -8,8 +8,7 @@ CXXFLAGS = -Wall -Wextra -std=c++17 -g
 
 # Linker flags
 # Added -lcomdlg32 for the Save As dialog
-LDFLAGS = -luser32 -lgdi32 -lgdiplus -lkernel32 -lshell32 -lcomdlg32
-
+LDFLAGS = -mwindows -luser32 -lgdi32 -lgdiplus -lkernel32 -lshell32 -lcomdlg32
 # Target executable
 TARGET = TimeTrackerPro.exe
 
