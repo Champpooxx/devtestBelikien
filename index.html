@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TimeTracker Pro - Pointage Heures</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -123,6 +124,14 @@
                             <label for="theme-auto">Auto</label>
                         </div>
                     </div>
+
+                    <!-- Sons de notification -->
+                    <div class="config-row">
+                        <div class="input-group">
+                            <label for="soundsEnabled">Activer les sons :</label>
+                            <input type="checkbox" id="soundsEnabled" onchange="saveConfig()">
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -151,6 +160,11 @@
                         <span class="stat-label">💰 Total gains :</span>
                         <span class="stat-value" id="monthEarnings">0,00€</span>
                     </div>
+                </div>
+
+                <!-- Mini-graphique -->
+                <div class="mini-chart-container">
+                    <canvas id="monthChart" width="400" height="150"></canvas>
                 </div>
 
                     <!-- Boutons export -->
@@ -204,5 +218,10 @@
             <div id="modal-details"></div>
         </div>
     </div>
+
+    <!-- Sons de notification -->
+    <audio id="sound-punch-in" src="sounds/punch-in.mp3" preload="auto"></audio>
+    <audio id="sound-punch-out" src="sounds/punch-out.mp3" preload="auto"></audio>
+    <audio id="sound-pause" src="sounds/pause.mp3" preload="auto"></audio>
 </body>
 </html>
