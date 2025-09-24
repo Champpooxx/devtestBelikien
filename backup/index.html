@@ -28,31 +28,14 @@
                 📴 Pas au travail
             </div>
 
-            <!-- Boutons de pointage -->
-            <div class="punch-controls">
-                <button class="punch-button punch-in" id="punchButton" onclick="togglePunch()">
-                    <span class="btn-icon">▶</span><span class="btn-text">Pointer Entrée</span>
-                </button>
-                <button class="punch-button punch-pause" id="pauseButton" onclick="togglePause()" disabled>
-                    <span class="btn-icon">||</span><span class="btn-text">Pause</span>
-                </button>
-            </div>
+            <!-- Bouton principal de pointage -->
+            <button class="punch-button punch-in" id="punchButton" onclick="togglePunch()">
+                🟢 Pointer Entrée
+            </button>
 
             <!-- Statistiques du jour -->
             <div class="card">
                 <h3>📊 Aujourd'hui</h3>
-
-                <!-- Indicateur de progression -->
-                <div class="progress-container">
-                    <div class="progress-bar-wrapper">
-                        <div class="progress-bar" id="dailyProgressBar"></div>
-                    </div>
-                    <div class="progress-text">
-                        <span id="progressPercent">0%</span>
-                        <span id="progressTimeRemaining">Objectif : 7h 00m</span>
-                    </div>
-                </div>
-
                 <div class="stat-item">
                     <span class="stat-label">⏱️ Temps travaillé :</span>
                     <span class="stat-value" id="workedTime">0h 00m</span>
@@ -107,31 +90,6 @@
                         <div class="input-group">
                             <label for="dailyHours">Heures/jour théoriques :</label>
                             <input type="number" id="dailyHours" value="7" step="0.25" onchange="saveConfig()">
-                        </div>
-                    </div>
-
-                    <!-- Horaires de validation -->
-                    <div class="config-row">
-                        <div class="input-group">
-                            <label for="authorizedStartTime">Horaire début autorisé :</label>
-                            <input type="time" id="authorizedStartTime" value="07:30" onchange="saveConfig()">
-                        </div>
-                        <div class="input-group">
-                            <label for="authorizedEndTime">Horaire fin autorisé :</label>
-                            <input type="time" id="authorizedEndTime" value="18:00" onchange="saveConfig()">
-                        </div>
-                    </div>
-
-                    <!-- Sélecteur de thème -->
-                    <div class="theme-selector">
-                        <label>Thème :</label>
-                        <div class="theme-options">
-                            <input type="radio" id="theme-dark" name="theme" value="dark" checked>
-                            <label for="theme-dark">Sombre</label>
-                            <input type="radio" id="theme-light" name="theme" value="light">
-                            <label for="theme-light">Clair</label>
-                            <input type="radio" id="theme-auto" name="theme" value="auto">
-                            <label for="theme-auto">Auto</label>
                         </div>
                     </div>
                 </div>
