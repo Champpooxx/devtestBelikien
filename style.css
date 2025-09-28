@@ -689,6 +689,158 @@ html[data-theme='light'] .calendar-day:hover:not(.other-month):not(.future) {
     margin-bottom: 15px;
 }
 
+/* ======================
+   MODALE D'ÉDITION
+   ====================== */
+
+#edit-modal .modal-content {
+    max-width: 500px;
+}
+
+#edit-modal-content h4 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 5px;
+}
+
+.edit-pause-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.edit-pause-item input {
+    width: 100%;
+    padding: 8px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+    border-radius: var(--border-radius-sm);
+}
+
+.remove-pause-btn {
+    background: var(--color-danger);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.btn-small {
+    background: var(--button-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--input-border);
+    padding: 8px 12px;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+.btn-small:hover {
+    background: var(--button-hover-bg);
+}
+
+.edit-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.edit-modal-actions .punch-button {
+    height: 50px;
+}
+
+.error-message {
+    background: rgba(244, 67, 54, 0.2);
+    color: #ffcdd2;
+    border: 1px solid rgba(244, 67, 54, 0.5);
+    padding: 10px;
+    border-radius: var(--border-radius-sm);
+    margin-top: 15px;
+    text-align: center;
+}
+
+html[data-theme='light'] .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+.modifications-history {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--card-border);
+}
+
+.modifications-history h4 {
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.modification-item {
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+.modification-item p {
+    margin-bottom: 5px;
+}
+
+.modification-item ul {
+    list-style-position: inside;
+    padding-left: 10px;
+}
+
+.calendar-day {
+    position: relative; /* Pour positionner le bouton d'édition */
+}
+
+.edit-icon-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(0, 0, 0, 0.4);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    line-height: 20px;
+    text-align: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.calendar-day:hover .edit-icon-btn {
+    opacity: 1;
+}
+
+.edit-day-btn {
+    width: 100%;
+    margin-top: 20px;
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.edit-day-btn:hover {
+    background-color: var(--accent-color-hover);
+}
+
 
 /* Piggy Bank */
 .piggy-bank-container {
