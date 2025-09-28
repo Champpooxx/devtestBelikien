@@ -852,11 +852,21 @@ function createDayElement(dayNum, dayClass, dayData = null) {
     dayElement.textContent = dayNum;
 
     if (dayData) {
-        dayElement.title = `${dayData.duration}\n${dayData.netEarning}€ net\n${dayData.startTime} → ${dayData.endTime}`;
+        dayElement.title = `${dayData.duration}\n${dayData.netEarning}€ net\n${dayData.startTime} → ${dayData.endTime}\n(clic pour détails, ✏️ pour éditer)`;
         dayElement.addEventListener('click', () => {
             showDayDetails(dayData);
         });
         dayElement.style.cursor = 'pointer';
+
+        const editButton = document.createElement('button');
+        editButton.className = 'edit-icon-btn';
+        editButton.innerHTML = '✏️';
+        editButton.title = 'Modifier cette journée';
+        editButton.onclick = (e) => {
+            e.stopPropagation(); // Empêche l'ouverture de la modale de détails
+            openEditModal(dayData);
+        };
+        dayElement.appendChild(editButton);
     }
 
     return dayElement;
@@ -900,6 +910,37 @@ function showDayDetails(dayData) {
             <span class="stat-value">${dayData.netEarning}€</span>
         </div>
     `;
+
+    if (dayData.modifications && dayData.modifications.length > 0) {
+        let modificationsHtml = `
+            <div class="modifications-history">
+                <h4>Historique des modifications</h4>
+        `;
+        dayData.modifications.forEach(mod => {
+            const modDate = new Date(mod.timestamp).toLocaleString('fr-FR');
+            let changesStr = mod.changes.map(c => `<li>${c.field}: ${c.oldValue} → ${c.newValue}</li>`).join('');
+            modificationsHtml += `
+                <div class="modification-item">
+                    <p><strong>Le ${modDate}</strong></p>
+                    <p><em>Motif : ${mod.reason}</em></p>
+                    <ul>${changesStr}</ul>
+                </div>
+            `;
+        });
+        modificationsHtml += '</div>';
+        modalDetails.innerHTML += modificationsHtml;
+    }
+
+    const editButton = document.createElement('button');
+    editButton.textContent = '✏️ Modifier cette journée';
+    editButton.className = 'btn-small edit-day-btn';
+    editButton.onclick = () => {
+        modal.style.display = 'none'; // Fermer la modale de détails
+        openEditModal(dayData);
+    };
+
+    modalDetails.appendChild(document.createElement('br'));
+    modalDetails.appendChild(editButton);
 
     modal.style.display = 'block';
 
@@ -949,6 +990,180 @@ function setupCollapsibleSections() {
         });
     });
 }
+
+// ======================
+// MODALE D'ÉDITION
+// ======================
+
+function openEditModal(dayData) {
+    const modal = document.getElementById('edit-modal');
+    document.getElementById('edit-date-original').value = dayData.date;
+    document.getElementById('edit-date').value = dayData.date;
+    document.getElementById('edit-startTime').value = dayData.startTime;
+    document.getElementById('edit-endTime').value = dayData.endTime;
+    document.getElementById('edit-reason').value = '';
+    document.getElementById('edit-validation-error').style.display = 'none';
+
+    const pausesContainer = document.getElementById('edit-pauses-container');
+    pausesContainer.innerHTML = ''; // Vider les anciennes pauses
+
+    if (dayData.pauses && dayData.pauses.length > 0) {
+        dayData.pauses.forEach(pause => {
+            addPauseElement(pause);
+        });
+    }
+
+    modal.style.display = 'block';
+
+    // Attacher les écouteurs
+    document.getElementById('edit-modal-close').onclick = () => modal.style.display = 'none';
+    document.getElementById('cancel-edit-button').onclick = () => modal.style.display = 'none';
+    document.getElementById('add-pause-button').onclick = () => addPauseElement();
+    document.getElementById('save-edit-button').onclick = saveEditedSession;
+}
+
+function addPauseElement(pause = null) {
+    const pausesContainer = document.getElementById('edit-pauses-container');
+    const pauseElement = document.createElement('div');
+    pauseElement.className = 'edit-pause-item';
+
+    const startTime = pause ? new Date(pause.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+    const endTime = pause ? new Date(pause.end).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+    pauseElement.innerHTML = `
+        <input type="time" class="edit-pause-start" value="${startTime}">
+        <input type="time" class="edit-pause-end" value="${endTime}">
+        <button class="remove-pause-btn">X</button>
+    `;
+
+    pausesContainer.appendChild(pauseElement);
+
+    pauseElement.querySelector('.remove-pause-btn').onclick = () => {
+        pauseElement.remove();
+    };
+}
+
+function saveEditedSession() {
+    const originalDate = document.getElementById('edit-date-original').value;
+    const newDate = document.getElementById('edit-date').value;
+    const startTimeStr = document.getElementById('edit-startTime').value;
+    const endTimeStr = document.getElementById('edit-endTime').value;
+    const reason = document.getElementById('edit-reason').value.trim();
+    const errorContainer = document.getElementById('edit-validation-error');
+
+    // --- 1. Validation ---
+    if (!reason) {
+        errorContainer.textContent = 'Le motif de la modification est obligatoire.';
+        errorContainer.style.display = 'block';
+        return;
+    }
+
+    const startDateTime = new Date(`${newDate}T${startTimeStr}`);
+    const endDateTime = new Date(`${newDate}T${endTimeStr}`);
+
+    if (endDateTime <= startDateTime) {
+        errorContainer.textContent = 'L\'heure de fin doit être après l\'heure de début.';
+        errorContainer.style.display = 'block';
+        return;
+    }
+
+    let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+    const originalSessionIndex = history.findIndex(day => day.date === originalDate);
+    if (originalSessionIndex === -1) {
+        errorContainer.textContent = 'Erreur: session originale introuvable.';
+        errorContainer.style.display = 'block';
+        return;
+    }
+    const originalSession = history[originalSessionIndex];
+
+    // Vérifier les chevauchements si la date change
+    if (newDate !== originalDate && history.some(day => day.date === newDate)) {
+        errorContainer.textContent = `Une session existe déjà pour le ${newDate}.`;
+        errorContainer.style.display = 'block';
+        return;
+    }
+
+    // --- 2. Recalcul des pauses ---
+    const pauseElements = document.querySelectorAll('.edit-pause-item');
+    let totalPauseMs = 0;
+    let newPauses = [];
+    for (const el of pauseElements) {
+        const pauseStartStr = el.querySelector('.edit-pause-start').value;
+        const pauseEndStr = el.querySelector('.edit-pause-end').value;
+        if (!pauseStartStr || !pauseEndStr) continue;
+
+        const pauseStart = new Date(`${newDate}T${pauseStartStr}`);
+        const pauseEnd = new Date(`${newDate}T${pauseEndStr}`);
+
+        if (pauseEnd <= pauseStart) {
+            errorContainer.textContent = 'La fin d\'une pause doit être après son début.';
+            errorContainer.style.display = 'block';
+            return;
+        }
+        if (pauseStart < startDateTime || pauseEnd > endDateTime) {
+            errorContainer.textContent = 'Les pauses doivent être comprises dans la plage de travail.';
+            errorContainer.style.display = 'block';
+            return;
+        }
+        const pauseDuration = pauseEnd - pauseStart;
+        totalPauseMs += pauseDuration;
+        newPauses.push({ start: pauseStart.toISOString(), end: pauseEnd.toISOString(), duration: pauseDuration });
+    }
+
+    // --- 3. Recalcul de la session ---
+    const totalDurationMs = endDateTime - startDateTime;
+    const workedDurationMs = totalDurationMs - totalPauseMs;
+    const durationHours = workedDurationMs / (1000 * 60 * 60);
+    const grossEarning = durationHours * originalSession.hourlyGross;
+    const netEarning = durationHours * originalSession.hourlyNet;
+
+    // --- 4. Historique des modifications ---
+    if (!originalSession.modifications) {
+        originalSession.modifications = [];
+    }
+    const timestamp = new Date().toISOString();
+    const changes = [];
+    if (originalSession.date !== newDate) changes.push({ field: 'date', oldValue: originalSession.date, newValue: newDate });
+    if (originalSession.startTime !== startTimeStr) changes.push({ field: 'startTime', oldValue: originalSession.startTime, newValue: startTimeStr });
+    if (originalSession.endTime !== endTimeStr) changes.push({ field: 'endTime', oldValue: originalSession.endTime, newValue: endTimeStr });
+    // On pourrait ajouter une comparaison détaillée des pauses
+    if (originalSession.totalPauseMs !== totalPauseMs) changes.push({ field: 'pauses', oldValue: formatDuration(originalSession.totalPauseMs), newValue: formatDuration(totalPauseMs) });
+
+    if(changes.length > 0) {
+         originalSession.modifications.push({
+            timestamp,
+            reason,
+            changes
+        });
+    }
+
+    // --- 5. Mise à jour de la session ---
+    const updatedSession = {
+        ...originalSession,
+        date: newDate,
+        startTime: startTimeStr,
+        endTime: endTimeStr,
+        startDateTime: startDateTime.toISOString(),
+        endDateTime: endDateTime.toISOString(),
+        duration: formatDuration(workedDurationMs),
+        durationMs: workedDurationMs,
+        totalPauseMs: totalPauseMs,
+        pauses: newPauses,
+        grossEarning: grossEarning.toFixed(2),
+        netEarning: netEarning.toFixed(2),
+    };
+
+    // --- 6. Sauvegarde ---
+    history[originalSessionIndex] = updatedSession;
+    localStorage.setItem('timetracker_history', JSON.stringify(history));
+
+    // --- 7. Finalisation ---
+    document.getElementById('edit-modal').style.display = 'none';
+    updateMonthView();
+    alert('✅ Session modifiée avec succès !');
+    console.log("📝 Session modifiée : ", { original: originalSession, updated: updatedSession });
+}
+
 
 // ======================
 // EXPORT CSV
@@ -1004,7 +1219,7 @@ function exportToCSV(data, filename) {
     csvRows.push(formatCsvRow(['Détail des journées']));
     const headers = [
         'Date', 'Jour', 'Heure Début', 'Heure Fin', 'Durée Travail', 'Durée Pause',
-        'Gains Nets (€)', 'Taux Net (€/h)', 'Gains Bruts (€)', 'Taux Brut (€/h)', 'Détail Pauses', 'Notes'
+        'Gains Nets (€)', 'Taux Net (€/h)', 'Gains Bruts (€)', 'Taux Brut (€/h)', 'Détail Pauses', 'Notes', 'Historique Modifications'
     ];
     csvRows.push(formatCsvRow(headers));
 
@@ -1029,6 +1244,14 @@ function exportToCSV(data, filename) {
             })
             .join(', ');
 
+        const modificationDetails = (day.modifications || [])
+            .map(mod => {
+                const modDate = new Date(mod.timestamp).toLocaleString('fr-FR');
+                const changesStr = mod.changes.map(c => `${c.field}: ${c.oldValue} -> ${c.newValue}`).join(', ');
+                return `[${modDate}] Motif: ${mod.reason} | Changements: ${changesStr}`;
+            })
+            .join('; ');
+
         const row = [
             day.date,
             dayName,
@@ -1041,7 +1264,8 @@ function exportToCSV(data, filename) {
             day.grossEarning,
             day.hourlyGross,
             pauseDetails,
-            notes
+            notes,
+            modificationDetails
         ];
         csvRows.push(formatCsvRow(row));
     });

@@ -222,6 +222,51 @@
         </div>
     </div>
 
+    <!-- Modal pour l'édition -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="edit-modal-close">&times;</span>
+            <h3>✏️ Éditer la session</h3>
+            <div id="edit-modal-content">
+                <input type="hidden" id="edit-date-original">
+
+                <div class="input-group">
+                    <label for="edit-date">Date de travail</label>
+                    <input type="date" id="edit-date">
+                </div>
+
+                <div class="config-row">
+                    <div class="input-group">
+                        <label for="edit-startTime">Heure d'entrée</label>
+                        <input type="time" id="edit-startTime">
+                    </div>
+                    <div class="input-group">
+                        <label for="edit-endTime">Heure de sortie</label>
+                        <input type="time" id="edit-endTime">
+                    </div>
+                </div>
+
+                <h4>Pauses</h4>
+                <div id="edit-pauses-container">
+                    <!-- Les pauses seront ajoutées dynamiquement ici -->
+                </div>
+                <button id="add-pause-button" class="btn-small">Ajouter une pause</button>
+
+                <div class="input-group">
+                    <label for="edit-reason">Motif de la modification (obligatoire)</label>
+                    <input type="text" id="edit-reason" placeholder="Ex: Oubli de dépointer">
+                </div>
+
+                <div id="edit-validation-error" class="error-message" style="display: none;"></div>
+
+                <div class="edit-modal-actions">
+                    <button id="save-edit-button" class="punch-button punch-in">Enregistrer</button>
+                    <button id="cancel-edit-button" class="punch-button punch-out">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Sons de notification -->
     <audio id="sound-punch-in" src="sounds/punch-in.mp3" preload="auto"></audio>
     <audio id="sound-punch-out" src="sounds/punch-out.mp3" preload="auto"></audio>
