@@ -218,11 +218,21 @@ html[data-theme='light'] .current-time {
 }
 
 /* Card-based layout for sections */
+.cards-container {
+    display: grid;
+    gap: 20px;
+}
+
+.column {
+    display: grid;
+    gap: 20px;
+}
+
 .card {
     background: var(--card-bg);
     border-radius: var(--border-radius-lg);
     padding: 20px;
-    margin-bottom: 20px;
+    /* margin-bottom is handled by the parent grid 'gap' property */
     border: 1px solid var(--card-border);
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     box-shadow: var(--box-shadow-soft);
@@ -910,9 +920,7 @@ html[data-theme='light'] .error-message {
 
 @media (min-width: 1200px) {
     .cards-container {
-        display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 20px;
         align-items: flex-start;
     }
 
