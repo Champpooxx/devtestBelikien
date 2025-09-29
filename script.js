@@ -655,7 +655,10 @@ function updateMonthView() {
 
     const totalDays = monthHistory.length;
     const totalMs = monthHistory.reduce((sum, day) => sum + (day.durationMs || 0), 0);
-    const totalEarnings = monthHistory.reduce((sum, day) => sum + parseFloat(day.netEarning || 0), 0);
+    const totalEarnings = monthHistory.reduce((sum, day) => {
+        const earningStr = (day.netEarning || '0').toString().replace(',', '.');
+        return sum + parseFloat(earningStr);
+    }, 0);
 
     const elements = {
         monthDays: totalDays,
