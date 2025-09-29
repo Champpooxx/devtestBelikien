@@ -200,16 +200,25 @@ function punchIn() {
 
     const workDate = getWorkDate(now);
 
+    // --- NOUVEAU : Charger l'historique du jour pour continuer la progression ---
+    let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+    const todayHistory = history.find(day => day.date === workDate);
+    let previouslyWorkedMs = 0;
+    if (todayHistory) {
+        previouslyWorkedMs = todayHistory.durationMs;
+        console.log(`Reprise de la journée avec ${formatDuration(previouslyWorkedMs)} de travail existant.`);
+    }
+    // --- FIN NOUVEAU ---
+
     currentSession = {
         workDate: workDate,
         startTime: now.toISOString(),
         endTime: null,
-        sessionHourlyGross: config.hourlyGross,
-        sessionHourlyNet: config.hourlyNet,
         isPaused: false,
         pauseStartTime: null,
         totalPauseMs: 0,
-        pauses: []
+        pauses: [],
+        previouslyWorkedMs: previouslyWorkedMs // Pour le calcul cumulé
     };
 
     isWorking = true;
@@ -289,8 +298,8 @@ function punchOut() {
     const workedDurationMs = totalDurationMs - currentSession.totalPauseMs;
     const durationHours = workedDurationMs / (1000 * 60 * 60);
 
-    const grossEarning = durationHours * currentSession.sessionHourlyGross;
-    const netEarning = durationHours * currentSession.sessionHourlyNet;
+    const grossEarning = durationHours * config.hourlyGross;
+    const netEarning = durationHours * config.hourlyNet;
 
     const workDay = {
         date: currentSession.workDate,
@@ -304,8 +313,8 @@ function punchOut() {
         pauses: currentSession.pauses,
         grossEarning: grossEarning.toFixed(2),
         netEarning: netEarning.toFixed(2),
-        hourlyGross: currentSession.sessionHourlyGross,
-        hourlyNet: currentSession.sessionHourlyNet
+        hourlyGross: config.hourlyGross,
+        hourlyNet: config.hourlyNet
     };
 
     saveToHistory(workDay);
@@ -359,9 +368,21 @@ function updateDisplay() {
     }
 
     if (!isWorking || !currentSession) {
-        workedTimeEl.textContent = '0h 00m';
-        grossEarningsEl.textContent = '0,00€';
-        netEarningsEl.textContent = '0,00€';
+        const workDate = getWorkDate(new Date());
+        let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+        const todayHistory = history.find(day => day.date === workDate);
+
+        if (todayHistory) {
+            workedTimeEl.textContent = todayHistory.duration;
+            grossEarningsEl.textContent = parseFloat(todayHistory.grossEarning).toFixed(2) + '€';
+            netEarningsEl.textContent = parseFloat(todayHistory.netEarning).toFixed(2) + '€';
+            updateProgressBar(todayHistory.durationMs);
+        } else {
+            workedTimeEl.textContent = '0h 00m';
+            grossEarningsEl.textContent = '0,00€';
+            netEarningsEl.textContent = '0,00€';
+            updateProgressBar(0);
+        }
         projectionEl.textContent = '--€';
         return;
     }
@@ -374,18 +395,19 @@ function updateDisplay() {
         currentPauseMs = now - new Date(currentSession.pauseStartTime);
     }
 
-    const workedMs = (now - startTime) - (currentSession.totalPauseMs + currentPauseMs);
-    const durationHours = workedMs / (1000 * 60 * 60);
+    const workedMsThisSession = (now - startTime) - (currentSession.totalPauseMs + currentPauseMs);
+    const totalWorkedMsToday = workedMsThisSession + (currentSession.previouslyWorkedMs || 0);
+    const durationHours = totalWorkedMsToday / (1000 * 60 * 60);
 
-    const grossEarning = durationHours * currentSession.sessionHourlyGross;
-    const netEarning = durationHours * currentSession.sessionHourlyNet;
+    const grossEarning = durationHours * config.hourlyGross;
+    const netEarning = durationHours * config.hourlyNet;
 
-    workedTimeEl.textContent = formatDuration(workedMs);
+    workedTimeEl.textContent = formatDuration(totalWorkedMsToday);
     grossEarningsEl.textContent = grossEarning.toFixed(2) + '€';
     netEarningsEl.textContent = netEarning.toFixed(2) + '€';
 
     updateProjection();
-    updateProgressBar(workedMs);
+    updateProgressBar(totalWorkedMsToday);
 }
 
 function updateProjection() {
@@ -420,7 +442,7 @@ function updateProjection() {
 
     const totalDurationMs = endTime - startTime;
     const totalDurationHours = totalDurationMs / (1000 * 60 * 60);
-    const projectionNet = totalDurationHours * currentSession.sessionHourlyNet;
+    const projectionNet = totalDurationHours * config.hourlyNet;
 
     projectionEl.textContent = projectionNet.toFixed(2) + '€';
 }
@@ -432,22 +454,17 @@ function updateProgressBar(workedMs) {
 
     if (!progressBar || !progressPercentEl || !progressTimeEl) return;
 
-    if (!isWorking || !currentSession) {
-        progressBar.style.width = '0%';
-        progressPercentEl.textContent = '0%';
-        progressTimeEl.textContent = `Objectif : ${config.dailyHours}h`;
-        progressBar.className = 'progress-bar';
-        return;
-    }
-
     const dailyGoalMs = config.dailyHours * 60 * 60 * 1000;
-    const percent = Math.min((workedMs / dailyGoalMs) * 100, 100);
+    const percent = dailyGoalMs > 0 ? Math.min((workedMs / dailyGoalMs) * 100, 100) : 0;
 
     progressBar.style.width = `${percent}%`;
     progressPercentEl.textContent = `${Math.floor(percent)}%`;
 
     progressBar.classList.remove('approaching', 'overtime');
-    if (percent >= 100) {
+
+    if (workedMs === 0) {
+        progressTimeEl.textContent = `Objectif : ${config.dailyHours}h`;
+    } else if (percent >= 100) {
         const overtimeMs = workedMs - dailyGoalMs;
         progressTimeEl.textContent = `Objectif atteint ! (+${formatDuration(overtimeMs)})`;
         progressBar.classList.add('overtime');
@@ -466,12 +483,6 @@ function updateProgressBar(workedMs) {
 // ======================
 
 function saveConfig() {
-    if (isWorking) {
-        alert('⚠️ Impossible de modifier la configuration pendant le travail.\n\n💡 Dépointer puis repointer pour appliquer les nouveaux paramètres.');
-        loadConfig();
-        return;
-    }
-
     config.hourlyGross = parseFloat(document.getElementById('hourlyGross').value) || 12.50;
     config.hourlyNet = parseFloat(document.getElementById('hourlyNet').value) || 10.00;
     config.weeklyHours = parseInt(document.getElementById('weeklyHours').value) || 35;
@@ -607,22 +618,47 @@ function loadCurrentSession() {
 // HISTORIQUE
 // ======================
 
-function saveToHistory(workDay) {
+function saveToHistory(newWorkSession) {
     let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+    const existingIndex = history.findIndex(day => day.date === newWorkSession.date);
 
-    const existingIndex = history.findIndex(day => day.date === workDay.date);
     if (existingIndex !== -1) {
-        if (confirm(`⚠️ Une journée existe déjà pour le ${workDay.date}.\nVoulez-vous la remplacer ?`)) {
-            history[existingIndex] = workDay;
-            console.log('🔄 Journée remplacée dans l\'historique');
-        } else {
-            return;
-        }
+        // --- Fusionner avec la session existante ---
+        const existingSession = history[existingIndex];
+
+        const totalDurationMs = existingSession.durationMs + newWorkSession.durationMs;
+        const totalPauseMs = existingSession.totalPauseMs + newWorkSession.totalPauseMs;
+        const totalGrossEarning = parseFloat(existingSession.grossEarning) + parseFloat(newWorkSession.grossEarning);
+        const totalNetEarning = parseFloat(existingSession.netEarning) + parseFloat(newWorkSession.netEarning);
+
+        const updatedSession = {
+            ...existingSession,
+            // Laisser l'heure de début originale, mettre à jour l'heure de fin
+            endTime: newWorkSession.endTime,
+            endDateTime: newWorkSession.endDateTime,
+            duration: formatDuration(totalDurationMs),
+            durationMs: totalDurationMs,
+            totalPauseMs: totalPauseMs,
+            pauses: [...existingSession.pauses, ...newWorkSession.pauses],
+            grossEarning: totalGrossEarning.toFixed(2),
+            netEarning: totalNetEarning.toFixed(2),
+            // Utiliser les derniers taux horaires
+            hourlyGross: newWorkSession.hourlyGross,
+            hourlyNet: newWorkSession.hourlyNet,
+        };
+
+        history[existingIndex] = updatedSession;
+        console.log('🔄 Journée mise à jour dans l\'historique');
+
     } else {
-        history.unshift(workDay);
+        // --- Ajouter une nouvelle session ---
+        history.unshift(newWorkSession);
+        console.log('✨ Nouvelle journée ajoutée à l\'historique');
     }
 
-    history = history.slice(0, 250);
+    // Trier l'historique par date au cas où
+    history.sort((a, b) => new Date(b.date) - new Date(a.date));
+    history = history.slice(0, 250); // Limiter la taille de l'historique
     localStorage.setItem('timetracker_history', JSON.stringify(history));
 }
 
