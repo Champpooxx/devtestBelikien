@@ -909,12 +909,13 @@ html[data-theme='light'] .error-message {
    ====================== */
 
 @media (min-width: 1200px) {
-    .main-content {
+    .cards-container {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
         align-items: flex-start;
     }
+
     .container {
         display: grid;
         grid-template-rows: auto 1fr;
