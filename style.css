@@ -94,6 +94,25 @@ body {
     text-align: center;
     padding: 20px;
     border-bottom: 1px solid var(--container-border);
+    position: relative;
+}
+
+.install-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: #6a4caf;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s;
+}
+
+.install-btn:hover {
+    background-color: #8a63d2;
 }
 
 html[data-theme='light'] {
