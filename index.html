@@ -211,7 +211,7 @@
 
                             <!-- Boutons export -->
                             <div class="export-buttons">
-                                <button class="export-btn" onclick="exportCurrentMonth()">📤 Export CSV Mois</button>
+                                <button id="exportMonthButton" class="export-btn" onclick="exportCurrentMonth()">📤 Export CSV Mois</button>
                                 <button class="export-btn" onclick="exportAllData()">📋 Export CSV Complet</button>
                             </div>
 
@@ -220,6 +220,15 @@
                             <div class="export-buttons">
                                 <button class="export-btn" onclick="exportToJSON()">📥 Backup manuel (JSON)</button>
                                 <button class="clear-btn" onclick="restoreFromBackup()">🔥 Restaurer backup</button>
+                            </div>
+                            <!-- Raccourcis Clavier -->
+                            <h4 style="margin-top: 20px;">⌨️ Raccourcis Clavier</h4>
+                            <div class="shortcuts-legend">
+                                <div class="shortcut-item"><span>Pointer Entrée/Sortie:</span> <kbd>Espace</kbd></div>
+                                <div class="shortcut-item"><span>Pause/Reprendre:</span> <kbd>P</kbd></div>
+                                <div class="shortcut-item"><span>Export CSV du mois:</span> <kbd>E</kbd></div>
+                                <div class="shortcut-item"><span>Plein écran:</span> <kbd>F11</kbd></div>
+                                <div class="shortcut-item"><span>Fermer les fenêtres:</span> <kbd>Échap</kbd></div>
                             </div>
                              <button class="clear-btn" onclick="clearHistory()">🗑️ Effacer tout l'historique</button>
                         </div>

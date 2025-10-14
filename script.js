@@ -69,6 +69,10 @@ window.onload = function() {
         setInterval(triggerDailyExport, 300000);
         console.log('🕰️ Vérification pour l\'export quotidien activée.');
 
+        // Activation des raccourcis clavier
+        document.addEventListener('keydown', handleShortcuts);
+        console.log('⌨️ Raccourcis clavier activés.');
+
         console.log('✅ TimeTracker Pro - Prêt !');
     }, 100);
 };
@@ -180,6 +184,7 @@ function togglePause() {
         });
         currentSession.pauseStartTime = null;
         console.log('▶️ REPRISE');
+        playSound('sound-punch-in'); // Son pour la reprise
 
         pauseButton.innerHTML = '<span class="btn-icon">||</span><span class="btn-text">Pause</span>';
         pauseButton.classList.remove('on-pause');
@@ -1211,5 +1216,95 @@ function clearHistory() {
         localStorage.removeItem('timetracker_history');
         updateMonthView();
         console.log('🗑️ Historique effacé');
+    }
+}
+
+// ======================
+// RACCOURCIS CLAVIER
+// ======================
+
+/**
+ * Gère les raccourcis clavier pour une interaction rapide.
+ * @param {KeyboardEvent} e L'événement clavier.
+ */
+function handleShortcuts(e) {
+    // Ne pas déclencher les raccourcis si l'utilisateur saisit du texte
+    const targetTagName = e.target.tagName;
+    if (targetTagName === 'INPUT' || targetTagName === 'TEXTAREA') {
+        return;
+    }
+
+    // Prévention du comportement par défaut pour les touches gérées
+    const preventedKeys = [' ', 'p', 'e', 'f11'];
+    if (preventedKeys.includes(e.key.toLowerCase())) {
+        e.preventDefault();
+    }
+
+    switch (e.key.toLowerCase()) {
+        case ' ': // ESPACE : Pointer entrée/sortie
+            triggerVisualFeedback('punchButton');
+            togglePunch();
+            break;
+        case 'p': // P : Pause/Reprendre
+            if (isWorking) {
+                triggerVisualFeedback('pauseButton');
+                togglePause();
+            }
+            break;
+        case 'e': // E : Export CSV du mois
+            triggerVisualFeedback('exportMonthButton');
+            exportCurrentMonth();
+            break;
+        case 'f11': // F11 : Plein écran
+            toggleFullScreen();
+            break;
+        case 'escape': // ESC : Fermer les modales
+            closeAllModals();
+            break;
+    }
+}
+
+/**
+ * Met l'application en mode plein écran ou en sort.
+ */
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
+            .catch(err => console.error(`Erreur passage plein écran : ${err.message} (${err.name})`));
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+}
+
+/**
+ * Ferme toutes les modales actuellement ouvertes.
+ */
+function closeAllModals() {
+    const modals = document.querySelectorAll('.modal');
+    let wasModalOpen = false;
+    modals.forEach(modal => {
+        if (modal.style.display === 'block') {
+            modal.style.display = 'none';
+            wasModalOpen = true;
+        }
+    });
+    if (wasModalOpen) {
+        console.log(' modals closed via ESC.');
+    }
+}
+
+/**
+ * Applique un retour visuel à un élément pour indiquer l'utilisation d'un raccourci.
+ * @param {string} elementId L'ID de l'élément à animer.
+ */
+function triggerVisualFeedback(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.classList.add('shortcut-activated');
+        setTimeout(() => {
+            element.classList.remove('shortcut-activated');
+        }, 300); // Durée de l'animation
     }
 }
