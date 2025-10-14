@@ -59,7 +59,15 @@ window.onload = function() {
 
         // Intervalles de mise à jour
         setInterval(updateClock, 1000);
-        setInterval(updateDisplay, 1000); // CORRECTION : Mise à jour continue
+        setInterval(updateDisplay, 1000);
+
+        // Ajout du système de backup automatique (toutes les heures)
+        setInterval(autoBackup, 3600000);
+        console.log('🕰️ Système de backup automatique activé.');
+
+        // Vérification pour l'export quotidien (toutes les 5 minutes)
+        setInterval(triggerDailyExport, 300000);
+        console.log('🕰️ Vérification pour l\'export quotidien activée.');
 
         console.log('✅ TimeTracker Pro - Prêt !');
     }, 100);
@@ -155,7 +163,7 @@ function togglePause() {
         statusBar.textContent = `⏸️ En pause depuis ${now.toLocaleTimeString('fr-FR')}`;
         statusBar.className = 'status-bar paused';
 
-        punchButton.disabled = true; // Désactiver le pointage sortie pendant la pause
+        punchButton.disabled = true;
         if (coinInterval) clearInterval(coinInterval);
 
     } else {
@@ -179,7 +187,7 @@ function togglePause() {
         statusBar.textContent = `✅ Au travail depuis ${new Date(currentSession.startTime).toLocaleTimeString('fr-FR')}`;
         statusBar.className = 'status-bar working';
 
-        punchButton.disabled = false; // Réactiver le pointage sortie
+        punchButton.disabled = false;
         coinInterval = setInterval(createCoin, 3000);
     }
 
@@ -200,15 +208,13 @@ function punchIn() {
 
     const workDate = getWorkDate(now);
 
-    // --- NOUVEAU : Charger l'historique du jour pour continuer la progression ---
-    let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+    let history = safeGetFromStorage('timetracker_history') || [];
     const todayHistory = history.find(day => day.date === workDate);
     let previouslyWorkedMs = 0;
     if (todayHistory) {
         previouslyWorkedMs = todayHistory.durationMs;
         console.log(`Reprise de la journée avec ${formatDuration(previouslyWorkedMs)} de travail existant.`);
     }
-    // --- FIN NOUVEAU ---
 
     currentSession = {
         workDate: workDate,
@@ -218,7 +224,7 @@ function punchIn() {
         pauseStartTime: null,
         totalPauseMs: 0,
         pauses: [],
-        previouslyWorkedMs: previouslyWorkedMs // Pour le calcul cumulé
+        previouslyWorkedMs: previouslyWorkedMs
     };
 
     isWorking = true;
@@ -245,7 +251,7 @@ function punchIn() {
     }
 
     saveCurrentSession();
-    updateDisplay(); // CORRECTION : Mise à jour immédiate
+    updateDisplay();
 
     if (coinInterval) clearInterval(coinInterval);
     coinInterval = setInterval(createCoin, 3000);
@@ -279,7 +285,6 @@ function punchOut() {
 
     currentSession.endTime = now.toISOString();
 
-    // Si en pause, terminer la pause avant de dépointer
     if (currentSession.isPaused) {
         const pauseStart = new Date(currentSession.pauseStartTime);
         const pauseEnd = now;
@@ -343,14 +348,15 @@ function punchOut() {
     }
 
     saveCurrentSession();
-    updateDisplay(); // CORRECTION : Mise à jour immédiate
-    updateMonthView(); // CORRECTION : Recharger le calendrier
+    updateDisplay();
+    updateMonthView();
 
     if (coinInterval) clearInterval(coinInterval);
 
     const workDateStr = new Date(savedWorkDate).toLocaleDateString('fr-FR');
     alert(`✅ Journée terminée pour le ${workDateStr} !\n⏱️ Temps travaillé : ${workDay.duration}\n💰 Gains nets : ${workDay.netEarning}€`);
     playSound('sound-punch-out');
+    autoBackup(); // Sauvegarde critique
 }
 
 // ======================
@@ -364,12 +370,12 @@ function updateDisplay() {
     const projectionEl = document.getElementById('projection');
 
     if (!workedTimeEl || !grossEarningsEl || !netEarningsEl || !projectionEl) {
-        return; // Protection si éléments n'existent pas
+        return;
     }
 
     if (!isWorking || !currentSession) {
         const workDate = getWorkDate(new Date());
-        let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+        let history = safeGetFromStorage('timetracker_history') || [];
         const todayHistory = history.find(day => day.date === workDate);
 
         if (todayHistory) {
@@ -500,14 +506,15 @@ function saveConfig() {
 
     localStorage.setItem('timetracker_config', JSON.stringify(config));
     applyTheme();
-    updateDisplay(); // CORRECTION : Mise à jour après changement config
+    updateDisplay();
     console.log('⚙️ Configuration sauvegardée', config);
+    autoBackup(); // Sauvegarde critique
 }
 
 function loadConfig() {
-    const saved = localStorage.getItem('timetracker_config');
+    const saved = safeGetFromStorage('timetracker_config');
     if (saved) {
-        config = JSON.parse(saved);
+        config = saved;
 
         const elements = [
             'hourlyGross', 'hourlyNet', 'weeklyHours', 'dailyHours',
@@ -521,27 +528,23 @@ function loadConfig() {
             }
         });
 
-        // Valeurs par défaut
         const endTargetEl = document.getElementById('endTimeTarget');
         if (endTargetEl && !endTargetEl.value) {
             endTargetEl.value = config.workEndTime || '17:00';
         }
 
-        // Appliquer le thème
         const themeRadio = document.querySelector(`input[name="theme"][value="${config.theme || 'dark'}"]`);
         if (themeRadio) {
             themeRadio.checked = true;
         }
         applyTheme();
 
-        // Appliquer le son
         const soundsCheckbox = document.getElementById('soundsEnabled');
         if (soundsCheckbox) {
             soundsCheckbox.checked = config.soundsEnabled;
         }
     }
 
-    // Attacher les écouteurs d'événements pour le thème
     document.querySelectorAll('input[name="theme"]').forEach(radio => {
         radio.addEventListener('change', saveConfig);
     });
@@ -572,16 +575,15 @@ function saveCurrentSession() {
 }
 
 function loadCurrentSession() {
-    const saved = localStorage.getItem('timetracker_current_session');
+    const saved = safeGetFromStorage('timetracker_current_session');
     if (saved) {
-        const data = JSON.parse(saved);
+        const data = saved;
         currentSession = data.session;
         isWorking = data.isWorking;
 
         if (isWorking) {
             const button = document.getElementById('punchButton');
             const statusBar = document.getElementById('statusBar');
-
             const pauseButton = document.getElementById('pauseButton');
 
             if (button) {
@@ -619,13 +621,11 @@ function loadCurrentSession() {
 // ======================
 
 function saveToHistory(newWorkSession) {
-    let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+    let history = safeGetFromStorage('timetracker_history') || [];
     const existingIndex = history.findIndex(day => day.date === newWorkSession.date);
 
     if (existingIndex !== -1) {
-        // --- Fusionner avec la session existante ---
         const existingSession = history[existingIndex];
-
         const totalDurationMs = existingSession.durationMs + newWorkSession.durationMs;
         const totalPauseMs = existingSession.totalPauseMs + newWorkSession.totalPauseMs;
         const totalGrossEarning = parseFloat(existingSession.grossEarning) + parseFloat(newWorkSession.grossEarning);
@@ -633,7 +633,6 @@ function saveToHistory(newWorkSession) {
 
         const updatedSession = {
             ...existingSession,
-            // Laisser l'heure de début originale, mettre à jour l'heure de fin
             endTime: newWorkSession.endTime,
             endDateTime: newWorkSession.endDateTime,
             duration: formatDuration(totalDurationMs),
@@ -642,7 +641,6 @@ function saveToHistory(newWorkSession) {
             pauses: [...existingSession.pauses, ...newWorkSession.pauses],
             grossEarning: totalGrossEarning.toFixed(2),
             netEarning: totalNetEarning.toFixed(2),
-            // Utiliser les derniers taux horaires
             hourlyGross: newWorkSession.hourlyGross,
             hourlyNet: newWorkSession.hourlyNet,
         };
@@ -651,19 +649,17 @@ function saveToHistory(newWorkSession) {
         console.log('🔄 Journée mise à jour dans l\'historique');
 
     } else {
-        // --- Ajouter une nouvelle session ---
         history.unshift(newWorkSession);
         console.log('✨ Nouvelle journée ajoutée à l\'historique');
     }
 
-    // Trier l'historique par date au cas où
     history.sort((a, b) => new Date(b.date) - new Date(a.date));
-    history = history.slice(0, 250); // Limiter la taille de l'historique
+    history = history.slice(0, 250);
     localStorage.setItem('timetracker_history', JSON.stringify(history));
 }
 
 function getHistoryForMonth(year, month) {
-    const history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+    const history = safeGetFromStorage('timetracker_history') || [];
     return history.filter(day => {
         const date = new Date(day.date);
         return date.getFullYear() === year && date.getMonth() === month;
@@ -707,8 +703,7 @@ function updateMonthView() {
         if (element) element.textContent = value;
     });
 
-    // CORRECTION : Générer le calendrier
-    setTimeout(generateCalendar, 50); // Petit délai pour s'assurer que DOM est prêt
+    setTimeout(generateCalendar, 50);
     generateMonthChart(monthHistory);
 }
 
@@ -771,35 +766,23 @@ function generateMonthChart(monthData) {
                 y: {
                     beginAtZero: true,
                     suggestedMax: dailyGoal + 2,
-                    ticks: {
-                        color: 'rgba(255, 255, 255, 0.7)'
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    }
+                    ticks: { color: 'rgba(255, 255, 255, 0.7)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
                 },
                 x: {
-                    ticks: {
-                        color: 'rgba(255, 255, 255, 0.7)'
-                    },
-                    grid: {
-                        display: false
-                    }
+                    ticks: { color: 'rgba(255, 255, 255, 0.7)' },
+                    grid: { display: false }
                 }
             },
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
                     callbacks: {
                         label: function(context) {
                             let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
+                            if (label) { label += ': '; }
                             if (context.parsed.y !== null) {
                                 label += context.parsed.y.toFixed(2) + 'h';
                             }
@@ -819,7 +802,6 @@ function generateMonthChart(monthData) {
 
 function generateCalendar() {
     console.log('🗓️ Génération du calendrier...');
-
     const calendarGrid = document.getElementById('calendarGrid');
     if (!calendarGrid) {
         console.warn('⚠️ Element calendarGrid non trouvé');
@@ -841,7 +823,6 @@ function generateCalendar() {
     const today = new Date();
     const monthHistory = getHistoryForMonth(year, month);
 
-    // Jours du mois précédent
     const prevMonth = new Date(year, month - 1, 0);
     for (let i = startDay - 1; i >= 0; i--) {
         const dayNum = prevMonth.getDate() - i;
@@ -849,7 +830,6 @@ function generateCalendar() {
         calendarGrid.appendChild(dayElement);
     }
 
-    // Jours du mois actuel
     for (let day = 1; day <= daysInMonth; day++) {
         const currentDate = new Date(year, month, day);
         const dayStr = currentDate.toISOString().split('T')[0];
@@ -873,7 +853,6 @@ function generateCalendar() {
         calendarGrid.appendChild(dayElement);
     }
 
-    // Compléter la grille
     const totalCells = calendarGrid.children.length;
     const remainingCells = 42 - totalCells;
 
@@ -881,8 +860,6 @@ function generateCalendar() {
         const dayElement = createDayElement(day, 'other-month');
         calendarGrid.appendChild(dayElement);
     }
-
-    console.log('✅ Calendrier généré avec', calendarGrid.children.length, 'jours');
 }
 
 function createDayElement(dayNum, dayClass, dayData = null) {
@@ -902,7 +879,7 @@ function createDayElement(dayNum, dayClass, dayData = null) {
         editButton.innerHTML = '✏️';
         editButton.title = 'Modifier cette journée';
         editButton.onclick = (e) => {
-            e.stopPropagation(); // Empêche l'ouverture de la modale de détails
+            e.stopPropagation();
             openEditModal(dayData);
         };
         dayElement.appendChild(editButton);
@@ -918,53 +895,24 @@ function showDayDetails(dayData) {
     const closeButton = document.querySelector('.close-button');
 
     const date = new Date(dayData.date).toLocaleDateString('fr-FR', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
 
     modalDate.textContent = `📅 ${date}`;
     modalDetails.innerHTML = `
-        <div class="stat-item">
-            <span class="stat-label">⏰ Heures :</span>
-            <span class="stat-value">${dayData.startTime} → ${dayData.endTime}</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">⏱️ Durée :</span>
-            <span class="stat-value">${dayData.duration}</span>
-        </div>
-        ${dayData.totalPauseMs > 0 ? `
-        <div class="stat-item">
-            <span class="stat-label">⏸️ Temps de pause :</span>
-            <span class="stat-value">${formatDuration(dayData.totalPauseMs)}</span>
-        </div>
-        ` : ''}
-        <div class="stat-item">
-            <span class="stat-label">💰 Gains bruts :</span>
-            <span class="stat-value">${dayData.grossEarning}€</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">💵 Gains nets :</span>
-            <span class="stat-value">${dayData.netEarning}€</span>
-        </div>
+        <div class="stat-item"><span class="stat-label">⏰ Heures :</span><span class="stat-value">${dayData.startTime} → ${dayData.endTime}</span></div>
+        <div class="stat-item"><span class="stat-label">⏱️ Durée :</span><span class="stat-value">${dayData.duration}</span></div>
+        ${dayData.totalPauseMs > 0 ? `<div class="stat-item"><span class="stat-label">⏸️ Temps de pause :</span><span class="stat-value">${formatDuration(dayData.totalPauseMs)}</span></div>` : ''}
+        <div class="stat-item"><span class="stat-label">💰 Gains bruts :</span><span class="stat-value">${dayData.grossEarning}€</span></div>
+        <div class="stat-item"><span class="stat-label">💵 Gains nets :</span><span class="stat-value">${dayData.netEarning}€</span></div>
     `;
 
     if (dayData.modifications && dayData.modifications.length > 0) {
-        let modificationsHtml = `
-            <div class="modifications-history">
-                <h4>Historique des modifications</h4>
-        `;
+        let modificationsHtml = `<div class="modifications-history"><h4>Historique des modifications</h4>`;
         dayData.modifications.forEach(mod => {
             const modDate = new Date(mod.timestamp).toLocaleString('fr-FR');
             let changesStr = mod.changes.map(c => `<li>${c.field}: ${c.oldValue} → ${c.newValue}</li>`).join('');
-            modificationsHtml += `
-                <div class="modification-item">
-                    <p><strong>Le ${modDate}</strong></p>
-                    <p><em>Motif : ${mod.reason}</em></p>
-                    <ul>${changesStr}</ul>
-                </div>
-            `;
+            modificationsHtml += `<div class="modification-item"><p><strong>Le ${modDate}</strong></p><p><em>Motif : ${mod.reason}</em></p><ul>${changesStr}</ul></div>`;
         });
         modificationsHtml += '</div>';
         modalDetails.innerHTML += modificationsHtml;
@@ -974,7 +922,7 @@ function showDayDetails(dayData) {
     editButton.textContent = '✏️ Modifier cette journée';
     editButton.className = 'btn-small edit-day-btn';
     editButton.onclick = () => {
-        modal.style.display = 'none'; // Fermer la modale de détails
+        modal.style.display = 'none';
         openEditModal(dayData);
     };
 
@@ -983,15 +931,8 @@ function showDayDetails(dayData) {
 
     modal.style.display = 'block';
 
-    closeButton.onclick = function() {
-        modal.style.display = 'none';
-    }
-
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
-    }
+    closeButton.onclick = function() { modal.style.display = 'none'; }
+    window.onclick = function(event) { if (event.target == modal) { modal.style.display = 'none'; } }
 }
 
 // ======================
@@ -1000,20 +941,19 @@ function showDayDetails(dayData) {
 
 function setupCollapsibleSections() {
     const collapsibles = document.querySelectorAll('.collapsible');
-    const openSections = JSON.parse(localStorage.getItem('timetracker_open_sections')) || [];
+    const openSections = safeGetFromStorage('timetracker_open_sections') || [];
 
     collapsibles.forEach((card, index) => {
         const header = card.querySelector('.card-header');
-        card.setAttribute('data-index', index); // ID pour le stockage
+        card.setAttribute('data-index', index);
 
-        // Restaurer l'état
         if (openSections.includes(index)) {
             card.classList.add('is-open');
         }
 
         header.addEventListener('click', () => {
             const isOpen = card.classList.toggle('is-open');
-            const currentlyOpen = JSON.parse(localStorage.getItem('timetracker_open_sections')) || [];
+            const currentlyOpen = safeGetFromStorage('timetracker_open_sections') || [];
 
             if (isOpen) {
                 if (!currentlyOpen.includes(index)) {
@@ -1044,7 +984,7 @@ function openEditModal(dayData) {
     document.getElementById('edit-validation-error').style.display = 'none';
 
     const pausesContainer = document.getElementById('edit-pauses-container');
-    pausesContainer.innerHTML = ''; // Vider les anciennes pauses
+    pausesContainer.innerHTML = '';
 
     if (dayData.pauses && dayData.pauses.length > 0) {
         dayData.pauses.forEach(pause => {
@@ -1054,7 +994,6 @@ function openEditModal(dayData) {
 
     modal.style.display = 'block';
 
-    // Attacher les écouteurs
     document.getElementById('edit-modal-close').onclick = () => modal.style.display = 'none';
     document.getElementById('cancel-edit-button').onclick = () => modal.style.display = 'none';
     document.getElementById('add-pause-button').onclick = () => addPauseElement();
@@ -1090,7 +1029,6 @@ function saveEditedSession() {
     const reason = document.getElementById('edit-reason').value.trim();
     const errorContainer = document.getElementById('edit-validation-error');
 
-    // --- 1. Validation ---
     if (!reason) {
         errorContainer.textContent = 'Le motif de la modification est obligatoire.';
         errorContainer.style.display = 'block';
@@ -1106,7 +1044,7 @@ function saveEditedSession() {
         return;
     }
 
-    let history = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+    let history = safeGetFromStorage('timetracker_history') || [];
     const originalSessionIndex = history.findIndex(day => day.date === originalDate);
     if (originalSessionIndex === -1) {
         errorContainer.textContent = 'Erreur: session originale introuvable.';
@@ -1115,17 +1053,15 @@ function saveEditedSession() {
     }
     const originalSession = history[originalSessionIndex];
 
-    // Vérifier les chevauchements si la date change
     if (newDate !== originalDate && history.some(day => day.date === newDate)) {
         errorContainer.textContent = `Une session existe déjà pour le ${newDate}.`;
         errorContainer.style.display = 'block';
         return;
     }
 
-    // --- 2. Recalcul des pauses ---
-    const pauseElements = document.querySelectorAll('.edit-pause-item');
     let totalPauseMs = 0;
     let newPauses = [];
+    const pauseElements = document.querySelectorAll('.edit-pause-item');
     for (const el of pauseElements) {
         const pauseStartStr = el.querySelector('.edit-pause-start').value;
         const pauseEndStr = el.querySelector('.edit-pause-end').value;
@@ -1149,14 +1085,12 @@ function saveEditedSession() {
         newPauses.push({ start: pauseStart.toISOString(), end: pauseEnd.toISOString(), duration: pauseDuration });
     }
 
-    // --- 3. Recalcul de la session ---
     const totalDurationMs = endDateTime - startDateTime;
     const workedDurationMs = totalDurationMs - totalPauseMs;
     const durationHours = workedDurationMs / (1000 * 60 * 60);
     const grossEarning = durationHours * originalSession.hourlyGross;
     const netEarning = durationHours * originalSession.hourlyNet;
 
-    // --- 4. Historique des modifications ---
     if (!originalSession.modifications) {
         originalSession.modifications = [];
     }
@@ -1165,18 +1099,12 @@ function saveEditedSession() {
     if (originalSession.date !== newDate) changes.push({ field: 'date', oldValue: originalSession.date, newValue: newDate });
     if (originalSession.startTime !== startTimeStr) changes.push({ field: 'startTime', oldValue: originalSession.startTime, newValue: startTimeStr });
     if (originalSession.endTime !== endTimeStr) changes.push({ field: 'endTime', oldValue: originalSession.endTime, newValue: endTimeStr });
-    // On pourrait ajouter une comparaison détaillée des pauses
     if (originalSession.totalPauseMs !== totalPauseMs) changes.push({ field: 'pauses', oldValue: formatDuration(originalSession.totalPauseMs), newValue: formatDuration(totalPauseMs) });
 
     if(changes.length > 0) {
-         originalSession.modifications.push({
-            timestamp,
-            reason,
-            changes
-        });
+         originalSession.modifications.push({ timestamp, reason, changes });
     }
 
-    // --- 5. Mise à jour de la session ---
     const updatedSession = {
         ...originalSession,
         date: newDate,
@@ -1192,11 +1120,9 @@ function saveEditedSession() {
         netEarning: netEarning.toFixed(2),
     };
 
-    // --- 6. Sauvegarde ---
     history[originalSessionIndex] = updatedSession;
     localStorage.setItem('timetracker_history', JSON.stringify(history));
 
-    // --- 7. Finalisation ---
     document.getElementById('edit-modal').style.display = 'none';
     updateMonthView();
     alert('✅ Session modifiée avec succès !');
@@ -1210,17 +1136,13 @@ function saveEditedSession() {
 
 function exportCurrentMonth() {
     const monthHistory = getHistoryForMonth(currentViewMonth.getFullYear(), currentViewMonth.getMonth());
-    const monthNames = [
-        'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
-        'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre'
-    ];
-
+    const monthNames = [ 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre' ];
     const filename = `timetracker_${monthNames[currentViewMonth.getMonth()]}_${currentViewMonth.getFullYear()}.csv`;
     exportToCSV(monthHistory, filename);
 }
 
 function exportAllData() {
-    const allHistory = JSON.parse(localStorage.getItem('timetracker_history') || '[]');
+    const allHistory = safeGetFromStorage('timetracker_history') || [];
     exportToCSV(allHistory, 'timetracker_historique_complet.csv');
 }
 
@@ -1230,12 +1152,8 @@ function exportToCSV(data, filename) {
         return;
     }
 
-    const formatCsvRow = (items) => {
-        return items.map(item => `"${String(item || '').replace(/"/g, '""')}"`).join(';');
-    };
-
+    const formatCsvRow = (items) => items.map(item => `"${String(item || '').replace(/"/g, '""')}"`).join(';');
     let csvRows = [];
-
     const reportTitle = filename.includes('complet') ? 'Export Complet' : `Mois de ${currentViewMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`;
     const totalDays = data.length;
     const totalMs = data.reduce((sum, day) => sum + (day.durationMs || 0), 0);
@@ -1246,7 +1164,6 @@ function exportToCSV(data, filename) {
     csvRows.push(formatCsvRow(['Rapport TimeTracker', reportTitle]));
     csvRows.push(formatCsvRow(['Exporté le', new Date().toLocaleString('fr-FR')]));
     csvRows.push('');
-
     csvRows.push(formatCsvRow(['Résumé de la période']));
     csvRows.push(formatCsvRow(['Jours travaillés', totalDays]));
     csvRows.push(formatCsvRow(['Durée totale de travail', formatDuration(totalMs)]));
@@ -1254,18 +1171,13 @@ function exportToCSV(data, filename) {
     csvRows.push(formatCsvRow(['Gains bruts totaux', `${totalGrossEarnings.toFixed(2)}€`]));
     csvRows.push(formatCsvRow(['Gains nets totaux', `${totalNetEarnings.toFixed(2)}€`]));
     csvRows.push('');
-
     csvRows.push(formatCsvRow(['Détail des journées']));
-    const headers = [
-        'Date', 'Jour', 'Heure Début', 'Heure Fin', 'Durée Travail', 'Durée Pause',
-        'Gains Nets (€)', 'Taux Net (€/h)', 'Gains Bruts (€)', 'Taux Brut (€/h)', 'Détail Pauses', 'Notes', 'Historique Modifications'
-    ];
+    const headers = [ 'Date', 'Jour', 'Heure Début', 'Heure Fin', 'Durée Travail', 'Durée Pause', 'Gains Nets (€)', 'Taux Net (€/h)', 'Gains Bruts (€)', 'Taux Brut (€/h)', 'Détail Pauses', 'Notes', 'Historique Modifications' ];
     csvRows.push(formatCsvRow(headers));
 
     data.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(day => {
         const date = new Date(day.date);
         const dayName = date.toLocaleDateString('fr-FR', { weekday: 'long' });
-
         let notes = '';
         if (day.startDateTime && day.endDateTime) {
             const startDate = new Date(day.startDateTime);
@@ -1274,38 +1186,9 @@ function exportToCSV(data, filename) {
                 notes = 'Travail de nuit';
             }
         }
-
-        const pauseDetails = (day.pauses || [])
-            .map(p => {
-                const start = new Date(p.start).toLocaleTimeString('fr-FR');
-                const end = new Date(p.end).toLocaleTimeString('fr-FR');
-                return `${start}-${end} (${formatDuration(p.duration)})`;
-            })
-            .join(', ');
-
-        const modificationDetails = (day.modifications || [])
-            .map(mod => {
-                const modDate = new Date(mod.timestamp).toLocaleString('fr-FR');
-                const changesStr = mod.changes.map(c => `${c.field}: ${c.oldValue} -> ${c.newValue}`).join(', ');
-                return `[${modDate}] Motif: ${mod.reason} | Changements: ${changesStr}`;
-            })
-            .join('; ');
-
-        const row = [
-            day.date,
-            dayName,
-            day.startTime,
-            day.endTime,
-            day.duration,
-            formatDuration(day.totalPauseMs || 0),
-            day.netEarning,
-            day.hourlyNet,
-            day.grossEarning,
-            day.hourlyGross,
-            pauseDetails,
-            notes,
-            modificationDetails
-        ];
+        const pauseDetails = (day.pauses || []).map(p => `${new Date(p.start).toLocaleTimeString('fr-FR')}-${new Date(p.end).toLocaleTimeString('fr-FR')} (${formatDuration(p.duration)})`).join(', ');
+        const modificationDetails = (day.modifications || []).map(mod => `[${new Date(mod.timestamp).toLocaleString('fr-FR')}] Motif: ${mod.reason} | Changements: ${mod.changes.map(c => `${c.field}: ${c.oldValue} -> ${c.newValue}`).join(', ')}`).join('; ');
+        const row = [ day.date, dayName, day.startTime, day.endTime, day.duration, formatDuration(day.totalPauseMs || 0), day.netEarning, day.hourlyNet, day.grossEarning, day.hourlyGross, pauseDetails, notes, modificationDetails ];
         csvRows.push(formatCsvRow(row));
     });
 
@@ -1313,15 +1196,12 @@ function exportToCSV(data, filename) {
     const csvBlob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(csvBlob);
-
     link.setAttribute('href', url);
     link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
-
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
     console.log(`📤 Export CSV amélioré: ${filename} (${data.length} entrées)`);
     alert(`✅ Export réussi !\n📁 Fichier: ${filename}\n📊 ${data.length} journée(s) exportée(s) dans un format amélioré.`);
 }
