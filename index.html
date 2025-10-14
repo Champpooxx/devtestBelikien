@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TimeTracker Pro - Pointage Heures</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8a63d2">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -12,6 +14,7 @@
         <div class="header">
             <h1>⏰ TimeTracker Pro</h1>
             <div class="subtitle">Pointage et Calcul Salaire</div>
+            <button id="installButton" class="install-btn" style="display: none;">Installer l'application</button>
         </div>
 
         <!-- Tirelire -->
@@ -296,5 +299,17 @@
     <audio id="sound-punch-in" src="sounds/punch-in.mp3" preload="auto"></audio>
     <audio id="sound-punch-out" src="sounds/punch-out.mp3" preload="auto"></audio>
     <audio id="sound-pause" src="sounds/pause.mp3" preload="auto"></audio>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>
