@@ -214,11 +214,19 @@
                                 <button class="export-btn" onclick="exportCurrentMonth()">📤 Export CSV Mois</button>
                                 <button class="export-btn" onclick="exportAllData()">📋 Export CSV Complet</button>
                             </div>
+
+                            <!-- Sauvegarde et Restauration -->
+                            <h4 style="margin-top: 20px;">💾 Sauvegarde et Restauration</h4>
+                            <div class="export-buttons">
+                                <button class="export-btn" onclick="exportToJSON()">📥 Backup manuel (JSON)</button>
+                                <button class="clear-btn" onclick="restoreFromBackup()">🔥 Restaurer backup</button>
+                            </div>
                              <button class="clear-btn" onclick="clearHistory()">🗑️ Effacer tout l'historique</button>
                         </div>
                     </div>
                 </div>
             </div>
+    <script src="assets/js/backup.js"></script>
     <script src="script.js"></script>
 
     <!-- Modal pour les détails du jour -->
